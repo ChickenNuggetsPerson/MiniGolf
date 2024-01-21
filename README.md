@@ -1,2 +1,2 @@
-#MINI GOLF
+# MINI GOLF
 https://chickennuggetsperson.github.io/MiniGolf/
