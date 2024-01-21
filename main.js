@@ -1,15 +1,18 @@
 let windowManager = new WindowManager()
 let isMaster = windowManager.init() == 0;
+windowManager.addCallbacks(mouseMove, mouseDown, mouseUp)
 
-let scene = [ new GameObject("test.gif") ];
+/** @type {GameObject[]} */
+let scene = [];
 
-scene[0].xPos = 300
-scene[0].yPos = 300
+let biome = [];
+let seed = Math.random() * 10;
 
 // Scene update code
 setInterval(() => {
     try {
         if (isMaster) {
+            scene.sort((a, b) => b.zIndex - a.zIndex); // Sort the scene by zIndex
             windowManager.setSendData(JSON.stringify(scene))
         } else {
             scene = JSON.parse(windowManager.getRecievedData())
@@ -20,55 +23,65 @@ setInterval(() => {
 
 // Render code
 setInterval(() => {
-    render();
+    // try {
+        render();
+    // } catch (error) {console.log(error)}
 }, 20);
 
+
 if (isMaster) {
+    genBiome()
+    setUpWorld()
+    fillCollisionWorld();
+
     setInterval(() => {
         updateWorld()
     }, 20);
 }
 
-let spriteNames = ["test.gif"]
-let images = {}
-spriteNames.forEach((name) => {
-    let img = document.createElement("img")
-    img.src = "./Sprites/" + name
-    images[name] = img
-})
+// Setup Biome Transpher
+if (!isMaster) {
+    fillBiome()
+    setInterval(() => {
+        let newBiome = JSON.parse(localStorage.getItem("biome"))
+        biome[newBiome.x] = newBiome.val
+        // console.log(newBiome)
+    }, 2);
+}
 
+let biomeSendX = 0;
+let biomeSendY = 0;
+if (isMaster) { // Send Biome data
+    setInterval(() => {
+        if (biomeSendX >= worldBounds.width) {
+            biomeSendX = 0;
+        }
+        localStorage.setItem("biome", JSON.stringify({
+            x: biomeSendX,
+            val: biome[biomeSendX]
+        }))
 
-var c = document.getElementById("canvas");
-var ctx = c.getContext("2d");
-
-
-let xOff = 0
-let yOff = 0
-
-let xPID = new Pid(0.3, 0, 0)
-let yPID = new Pid(0.3, 0, 0)
-
-function render() {
-    c.width = window.innerWidth
-    c.height = window.innerHeight
-
-    ctx.fillStyle = "#68ed40";
-    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
-    xOff -= xPID.iterate(xOff, window.screenLeft)
-    yOff -= yPID.iterate(yOff, window.screenTop)
-
-    scene.forEach((object) => {
-        ctx.drawImage(images[object.spriteStr], object.xPos - xOff, object.yPos - yOff, 200, 200)
-    })
-
+        biomeSendX += 1;
+    }, 5);
 }
 
 
-function updateWorld() {
-    console.log("update")
-    scene.forEach((object) => {
-        object.xPos += Math.cos(new Date().getTime() / 500) * 5
-        object.yPos += Math.sin(new Date().getTime() / 500) * 5
-    })
+
+function genBiome() {
+    for (let x = 0; x < worldBounds.width; x++) {
+        let tmp = []
+        for (let y = 0; y < worldBounds.height; y++) {
+            tmp.push(PerlinNoise.noise(x / 500, y / 500, seed))
+        }
+        biome.push(tmp)
+    }
+}
+function fillBiome() {
+    for (let x = 0; x < worldBounds.width; x++) {
+        let tmp = []
+        for (let y = 0; y < worldBounds.height; y++) {
+            tmp.push(0)
+        }
+        biome.push(tmp)
+    }
 }
