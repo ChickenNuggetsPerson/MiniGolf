@@ -31,8 +31,8 @@ setInterval(() => {
 
 if (isMaster) {
     genBiome()
+    fillHeightMap();
     setUpWorld()
-    fillCollisionWorld();
 
     setInterval(() => {
         updateWorld()
@@ -68,10 +68,23 @@ if (isMaster) { // Send Biome data
 
 
 function genBiome() {
+
+    let borderWidth = 150;
+
     for (let x = 0; x < worldBounds.width; x++) {
         let tmp = []
         for (let y = 0; y < worldBounds.height; y++) {
-            tmp.push(PerlinNoise.noise(x / 500, y / 500, seed))
+
+            let inBounds = false;
+            if (x < borderWidth || x > worldBounds.width - borderWidth) { inBounds = true; }
+            if (y < borderWidth || y > worldBounds.height - borderWidth) { inBounds = true; }
+            
+            if (inBounds) {
+                tmp.push(2) // Force the borders to be walls
+            } else {
+                tmp.push(PerlinNoise.noise(x / 500, y / 500, seed))
+            }
+
         }
         biome.push(tmp)
     }

@@ -1,4 +1,4 @@
-let worldBounds = new Bounds(-100, -100, window.screen.availWidth + 100, window.screen.availHeight + 100) // Screen Space 
+let worldBounds = new Bounds(0, 0, window.screen.availWidth, window.screen.availHeight) // Screen Space 
 
 function setUpWorld() {
     
@@ -14,6 +14,14 @@ function setUpWorld() {
             if (biome[x][y] > 0.6) { // Large Grass Patches
                 let canPlace = true;
 
+                try {
+                    let lookOff = 40;
+                    if (biome[x + lookOff][y] < 0.6) { canPlace = false; }
+                    if (biome[x - lookOff][y] < 0.6) { canPlace = false; }
+                    if (biome[x][y + lookOff] < 0.6) { canPlace = false; }
+                    if (biome[x][y - lookOff] < 0.6) { canPlace = false; }
+                } catch(err) {}
+
                 let xoffset = (Math.random() * 5) - 10
                 let yoffset = (Math.random() * 10)
                 
@@ -24,21 +32,25 @@ function setUpWorld() {
                         y + yoffset,
                         Math.random() * 15 - 7.5,
                         1.5, 
-                        false
+                        false,
+                        "",
                     )
                 )
             }
         }
     }
 
-
+    // Add Borders
     for (let x = 0; x < worldBounds.width; x += 32) {
         for (let y = 0; y < worldBounds.height; y += 32) {
             
             if (biome[x][y] > 0.55) { // Large Grass Patches
                 
+                let name = borderName(x, y, 32, 0.55)
+                setBoundsHeight(name, 8, x, y, 2)
+
                 scene.push(
-                    new GameObject("Borders/LongGrass/" + borderName(x, y, 32, 0.55) + ".png",
+                    new GameObject("Borders/LongGrass/" + name + ".png",
                         x,
                         y,
                         0,
@@ -57,6 +69,24 @@ function setUpWorld() {
     scene.push(new GameObject("Objects/Flag.png", 500, 501, 0, 2))
     scene.push(new GameObject("Objects/Hole.png", 500, 500, 0, 2, false, "hole"))
     getObjByID("hole").zIndex = -100
+
+
+
+    // Calculate heightmap
+
+    for (let x = worldBounds.x1; x < worldBounds.x2; x++) {
+        for (let y = worldBounds.y1; y < worldBounds.y2; y++) {
+            let collides = false;
+            heightBounds.forEach((bound) => {
+                if (bound.inBounds(x, y)) {
+                    collides = true;
+                }
+            })
+            if (collides) {
+                heightMap[x][y] = 8 // Height of the platforms
+            }
+        }
+    }
 }
 
 
@@ -116,3 +146,72 @@ function borderName(x, y, imgScale, lim) {
 
     return firstLetter + secondLetter
 }
+
+function setBoundsHeight(name, height, xPos, yPos, renderScale) {
+
+    /** @type {Bounds} */
+    let bounds = new Bounds(0, 0, 0, 0);
+    let secondBounds = new Bounds(0, 0, 0, 0)
+
+    switch (name) {
+
+        case "BL":
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 8 * renderScale, 11 * renderScale)
+            break;
+        case "BM":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale)
+            break;
+        case "BR":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 8 * renderScale)
+            break;
+
+
+
+        case "ML":
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale)
+            break;
+        case "MM":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 16 * renderScale)
+            break;
+        case "MR":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16  * renderScale, 6 * renderScale, 16 * renderScale)
+            break;
+
+
+
+        case "TL":
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 7 * renderScale, 7 * renderScale, 7 * renderScale)
+            break;
+        case "TM":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale)
+            break;
+        case "TR":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 7 * renderScale, 8 * renderScale)
+            break;
+
+
+
+        case "MBR":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 6 * renderScale, 16 * renderScale)
+            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 10 * renderScale)
+            break;
+        case "MBL":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale)
+            secondBounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 6 * renderScale, 16 * renderScale)
+            break;
+        case "MTR":
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 6 * renderScale, 16 * renderScale)
+            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale)
+            break;
+        case "MTL":
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 6 * renderScale, 16 * renderScale)
+            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale)
+            break;
+    }
+
+    heightBounds.push(bounds)
+    heightBounds.push(secondBounds)
+}
+
+/** @type {Bounds[]} */
+let heightBounds = []

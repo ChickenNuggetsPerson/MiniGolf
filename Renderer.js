@@ -64,35 +64,20 @@ function render() {
     yOff -= yPID.iterate(yOff, window.screenTop)
 
 
-    // for (let x = 0; x < worldBounds.width; x += renderBiomeScale) {
-    //     for (let y = 0; y < worldBounds.height; y += renderBiomeScale) {
-            
-    //         if (biome[x][y] > 0.65) {
-    //             let diff = (biome[x][y] - 0.65) / 0.15
-
-    //             ctx.fillStyle = lerpColor("#529c3b", "#234a18", diff);
-    //             ctx.beginPath();
-    //             ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
-    //         }
-
-    //         if (biome[x][y] < 0.3) {
-    //             let diff = (biome[x][y]) / 0.3
-
-    //             ctx.fillStyle = lerpColor("#1a7572", "#2cc7c2", diff);
-    //             ctx.beginPath();
-    //             ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
-    //         }
-
-    //         if (biome[x][y] > 0.3 && biome[x][y] < 0.50) {
-    //             let diff = (biome[x][y] - 0.3) / 0.2
-
-    //             ctx.fillStyle = lerpColor("#c7cf34", "#529c3b", diff);
-    //             ctx.beginPath();
-    //             ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
-    //         }
-        
-    //     }
-    // }
+    let count = 0;
+    for (let x = 0; x < worldBounds.width; x += renderBiomeScale) {
+        for (let y = 0; y < worldBounds.height; y += renderBiomeScale) {
+            if ( count % 2 == 0 ) {
+                ctx.fillStyle = "#55bd39"
+            } else {
+                ctx.fillStyle = "#4fad34"
+            }
+            ctx.beginPath();
+            ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
+            count++
+        }
+        count++
+    }
 
 
     let renderOverlap = 100
@@ -121,6 +106,17 @@ function render() {
                     width, 
                     height
                 )
+            } else if (object.id.endsWith("ball_shadow")) {
+                // Ball rendering
+    
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(
+                    images[object.spriteStr], 
+                    object.xPos - xOff - width / 2, 
+                    object.yPos - yOff - height - object.minHeight, 
+                    width, 
+                    height
+                )
     
             } else {
                 // Normal Rendering
@@ -131,7 +127,8 @@ function render() {
     
                 // Rotate the canvas
                 ctx.rotate(angleInRadians);
-    
+
+                ctx.globalAlpha = 1;
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(
                     images[object.spriteStr], 
@@ -147,6 +144,18 @@ function render() {
         } catch(err) {}
     })
 
+
+    // Render Height Maps
+    // let scale = 2
+    // for (let x = 0; x < worldBounds.width; x += scale) {
+    //     for (let y = 0; y < worldBounds.height; y += scale) {
+    //         ctx.fillStyle = lerpColor("#000000", "#ffffff", heightMap[x][y] / 8)
+    //         ctx.globalAlpha = 0.4
+    //         ctx.fillRect(x - xOff - scale/2, y - yOff - scale/2, scale, scale)
+    //         count++
+    //     }
+    //     count++
+    // }
 
     if (isMaster) {
         ctx.fillStyle = "#d9473d"

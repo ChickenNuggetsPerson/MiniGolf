@@ -31,7 +31,8 @@ class GameObject {
     
     height = 0;
     heightVel = 0;
-    heightAcc = -0.3;
+    heightAcc = -0.5;
+    minHeight = 0;
 
     drag = 1;
 
@@ -53,11 +54,10 @@ class GameObject {
         this.yVel += this.yAcc;
 
         this.xPos += this.xVel;
-        this.yPos += this.yVel
+        this.yPos += this.yVel;
 
-        this.xVel *= this.drag
-        this.yVel *= this.drag
-
+        this.xVel *= this.drag;
+        this.yVel *= this.drag;
 
         // Height Physics
         if (this.height > 0.05) {
@@ -66,16 +66,16 @@ class GameObject {
 
         this.height += this.heightVel
         
-        if (this.height <= 0.05 && Math.abs(this.heightVel) <= 0.05) { 
-            this.height = 0; 
+        if (this.height <= this.minHeight + 0.05 && Math.abs(this.heightVel) <= 0.05) { 
+            this.height = this.minHeight; 
             this.heightVel = 0;
         }
-        if (this.height <= 0.05 && Math.abs(this.height) >= 0.05) {
+        if (this.height <= this.minHeight + 0.05) {
             this.heightVel *= -0.5
         }
 
-        if (this.height < 0) {
-            this.height = 0;
+        if (this.height < this.minHeight) {
+            this.height = this.minHeight;
         }
     }
 
@@ -100,4 +100,18 @@ class Bounds {
         this.width = width
         this.height = height
     }    
+    inBounds(xPos, yPos) {
+        return xPos >= this.x1 && xPos <= this.x2 && yPos >= this.y1 && yPos <= this.y2;
+    }
+    getHeightEdges() {
+        const centerX = Math.floor(this.x1 + this.width/2);
+        const centerY = Math.floor(this.y1 + this.height/2);
+
+        return {
+            top: heightMap[centerX][Math.floor(this.y1)],
+            bottom: heightMap[centerX][Math.floor(this.y2)],
+            left: heightMap[Math.floor(this.x1)][centerY],
+            right: heightMap[Math.floor(this.x2)][centerY]
+        };
+    }
 }

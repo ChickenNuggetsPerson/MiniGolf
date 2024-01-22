@@ -1,11 +1,11 @@
-let collisionWorld = []
-function fillCollisionWorld() {
+let heightMap = []
+function fillHeightMap() {
     for (let x = 0; x < worldBounds.width; x++) {
         let tmp = []
         for (let y = 0; y < worldBounds.height; y++) {
             tmp.push(0)
         }
-        collisionWorld.push(tmp)
+        heightMap.push(tmp)
     }
 }
 
@@ -46,6 +46,24 @@ function updateWorld() {
             ball_shadow.deleteItem()
         }
     }
+
+    // Ball world collided
+    if (ball.xPos < worldBounds.x1) { ball.xPos = worldBounds.x1 + 2; ball.xVel *= -1; }
+    if (ball.xPos > worldBounds.x2) { ball.xPos = worldBounds.x2 - 2; ball.xVel *= -1; }
+
+    if (ball.yPos < worldBounds.y1) { ball.yPos = worldBounds.y1 + 2; ball.yVel *= -1; }
+    if (ball.yPos > worldBounds.y2) { ball.yPos = worldBounds.y2 - 2; ball.yVel *= -1; }
+
+
+    // Ball Wall Colide
+    let ballScale = 3
+    let ballBounds = new Bounds(ball.xPos - (2 * ballScale), ball.yPos - (4 * ballScale), 4 * ballScale, 4 * ballScale)
+    let edges = ballBounds.getHeightEdges()
+    if (edges.left > ball.height || edges.right > ball.height) { ball.xVel *= -1 }
+    if (edges.top > ball.height || edges.bottom > ball.height) { ball.yVel *= -1 }
+
+    ball.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
+    ball_shadow.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
 }
 
 
@@ -81,6 +99,6 @@ function mouseUp(x, y) {
 }
 function mouseMove(x, y) {
     // console.log("Move", x, y)
-    console.log(biome[x][y])
+    // console.log(heightMap[x][y])
 
 }
