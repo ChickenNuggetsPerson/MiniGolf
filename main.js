@@ -30,46 +30,67 @@ setInterval(() => {
 
 
 if (isMaster) {
-    genBiome()
-    fillHeightMap();
-    setUpWorld()
-
+    start()
     setInterval(() => {
         updateWorld()
     }, 20);
 }
 
+function start() {
+    scene = []
+    seed = Math.random() * 10;
+    
+    loading = true;
+
+    setTimeout(() => {
+
+        genBiome()
+        fillHeightMap();
+        setUpWorld()
+
+        // Generate Height maps and then choose ball and goal locations
+        setTimeout(() => {
+            genHeightMaps();
+            spawnBallAndGoal();
+
+            loading = false;
+        }, 20);
+
+    }, 500);
+}
+
+
 // Setup Biome Transpher
-if (!isMaster) {
-    fillBiome()
-    setInterval(() => {
-        let newBiome = JSON.parse(localStorage.getItem("biome"))
-        biome[newBiome.x] = newBiome.val
-        // console.log(newBiome)
-    }, 2);
-}
+// if (!isMaster) {
+//     fillBiome()
+//     setInterval(() => {
+//         let newBiome = JSON.parse(localStorage.getItem("biome"))
+//         biome[newBiome.x] = newBiome.val
+//     }, 2);
+// }
 
-let biomeSendX = 0;
-let biomeSendY = 0;
-if (isMaster) { // Send Biome data
-    setInterval(() => {
-        if (biomeSendX >= worldBounds.width) {
-            biomeSendX = 0;
-        }
-        localStorage.setItem("biome", JSON.stringify({
-            x: biomeSendX,
-            val: biome[biomeSendX]
-        }))
+// let biomeSendX = 0;
+// let biomeSendY = 0;
+// if (isMaster) { // Send Biome data
+//     setInterval(() => {
+//         if (biomeSendX >= worldBounds.width) {
+//             biomeSendX = 0;
+//         }
+//         localStorage.setItem("biome", JSON.stringify({
+//             x: biomeSendX,
+//             val: biome[biomeSendX]
+//         }))
 
-        biomeSendX += 1;
-    }, 5);
-}
+//         biomeSendX += 1;
+//     }, 5);
+// }
 
 
 
 function genBiome() {
+    biome = []
 
-    let borderWidth = 150;
+    let borderWidth = 80;
 
     for (let x = 0; x < worldBounds.width; x++) {
         let tmp = []
@@ -82,18 +103,12 @@ function genBiome() {
             if (inBounds) {
                 tmp.push(2) // Force the borders to be walls
             } else {
-                tmp.push(PerlinNoise.noise(x / 500, y / 500, seed))
+                tmp.push(
+                    // Math.floor(PerlinNoise.noise(x / 700, y / 700, seed) * 10) / 10
+                    PerlinNoise.noise(x / 500, y / 500, seed)
+                )
             }
 
-        }
-        biome.push(tmp)
-    }
-}
-function fillBiome() {
-    for (let x = 0; x < worldBounds.width; x++) {
-        let tmp = []
-        for (let y = 0; y < worldBounds.height; y++) {
-            tmp.push(0)
         }
         biome.push(tmp)
     }

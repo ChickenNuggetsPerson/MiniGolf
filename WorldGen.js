@@ -1,25 +1,27 @@
 let worldBounds = new Bounds(0, 0, window.screen.availWidth, window.screen.availHeight) // Screen Space 
 
+
+
+/** @type {Bounds[]} */
+let heightBounds = []
+
 function setUpWorld() {
-    
-    scene.push(new GameObject("Objects/Ball.png", 400, 400, 0, 3, true, "ball"))
-    scene.push(new GameObject("Objects/Ball_Shadow.png", 400, 400, 0, 3, false, "ball_shadow"))
-    getObjByID("ball").drag = 0.95
-    getObjByID("ball_shadow").zIndex = -101
+    heightBounds = []
 
     // Build Grass
+    let grassLimit = 0.65
     for (let x = 0; x < worldBounds.width; x += 20) {
         for (let y = 0; y < worldBounds.height; y += 10) {
             
-            if (biome[x][y] > 0.6) { // Large Grass Patches
+            if (biome[x][y] > grassLimit) { // Large Grass Patches
                 let canPlace = true;
 
                 try {
                     let lookOff = 40;
-                    if (biome[x + lookOff][y] < 0.6) { canPlace = false; }
-                    if (biome[x - lookOff][y] < 0.6) { canPlace = false; }
-                    if (biome[x][y + lookOff] < 0.6) { canPlace = false; }
-                    if (biome[x][y - lookOff] < 0.6) { canPlace = false; }
+                    if (biome[x + lookOff][y] < grassLimit) { canPlace = false; }
+                    if (biome[x - lookOff][y] < grassLimit) { canPlace = false; }
+                    if (biome[x][y + lookOff] < grassLimit) { canPlace = false; }
+                    if (biome[x][y - lookOff] < grassLimit) { canPlace = false; }
                 } catch(err) {}
 
                 let xoffset = (Math.random() * 5) - 10
@@ -41,12 +43,14 @@ function setUpWorld() {
     }
 
     // Add Borders
+    let borderLimt = 0.5
+
     for (let x = 0; x < worldBounds.width; x += 32) {
         for (let y = 0; y < worldBounds.height; y += 32) {
             
-            if (biome[x][y] > 0.55) { // Large Grass Patches
+            if (biome[x][y] > borderLimt) { // Large Grass Patches
                 
-                let name = borderName(x, y, 32, 0.55)
+                let name = borderName(x, y, 32, borderLimt)
                 setBoundsHeight(name, 8, x, y, 2)
 
                 scene.push(
@@ -64,16 +68,90 @@ function setUpWorld() {
             }
         }
     }
+}
 
 
-    scene.push(new GameObject("Objects/Flag.png", 500, 501, 0, 2))
-    scene.push(new GameObject("Objects/Hole.png", 500, 500, 0, 2, false, "hole"))
+function spawnBallAndGoal() {
+    let possibilities = findLowestVal(0.2)
+    let lowestVal = possibilities[Math.floor(Math.random() * possibilities.length)]
+
+    scene.push(new GameObject("Objects/Flag.png", lowestVal.x, lowestVal.y + 1, 0, 2))
+    scene.push(new GameObject("Objects/Hole.png", lowestVal.x, lowestVal.y, 0, 2, false, "hole"))
     getObjByID("hole").zIndex = -100
 
 
+    let ballLoc = chooseBalLoc(lowestVal)
+    scene.push(new GameObject("Objects/Ball.png", ballLoc.x, ballLoc.y, 0, 3, true, "ball"))
+    scene.push(new GameObject("Objects/Ball_Shadow.png", ballLoc.x, ballLoc.y, 0, 3, false, "ball_shadow"))
+    getObjByID("ball").drag = 0.95
+    getObjByID("ball_shadow").zIndex = -1
+
+    console.log("Spawned Objects", lowestVal, ballLoc)
+}
+
+function findLowestVal(limit) {
+    let possibilities = []
+
+    let borderDist = 200;
+
+    for (let x = borderDist; x < biome.length - borderDist; x++) {
+        for (let y = borderDist; y < biome[x].length - borderDist; y++) {
+            if (biome[x][y] < limit) {
+                possibilities.push({
+                    x: x,
+                    y: y
+                })
+            }
+        }
+    }
+
+    if (possibilities.length == 0) {
+        return findLowestVal(limit + 0.1)
+    }
+
+    return possibilities;
+}
+function dstBetweenPoints(pos1, pos2) {
+    let a = pos2.x - pos1.x
+    let b = pos2.y - pos1.y
+    return Math.sqrt(a * a + b * b)
+}
+function chooseBalLoc(goal) {
+
+    let possibilities = []
+    let borderDist = 200;
+
+
+    for (let x = borderDist; x < heightMap.length - borderDist; x++) {
+        for (let y = borderDist; y < heightMap[0].length - borderDist; y++) {
+
+            if (heightMap[x][y] != 0) { continue; }
+
+            if (dstBetweenPoints({ x: x, y: y }, goal) > 700) {
+                possibilities.push({
+                    x: x,
+                    y: y
+                })
+            }
+        }
+    }
+
+    if (possibilities.length == 0) {
+        return {
+            x: 500,
+            y: 500
+        }
+    }
+
+    return possibilities[Math.floor(Math.random() * possibilities.length)]
+}
+
+
+
+
+function genHeightMaps() {
 
     // Calculate heightmap
-
     for (let x = worldBounds.x1; x < worldBounds.x2; x++) {
         for (let y = worldBounds.y1; y < worldBounds.y2; y++) {
             let collides = false;
@@ -87,20 +165,10 @@ function setUpWorld() {
             }
         }
     }
+
+    console.log("Done Generating Height Maps")
 }
 
-
-// "Borders/LongGrass/BL.png",
-// "Borders/LongGrass/BM.png",
-// "Borders/LongGrass/BR.png",
-
-// "Borders/LongGrass/ML.png",
-// "Borders/LongGrass/MM.png",
-// "Borders/LongGrass/MR.png",
-
-// "Borders/LongGrass/TL.png",
-// "Borders/LongGrass/TM.png",
-// "Borders/LongGrass/TR.png",
 
 function borderName(x, y, imgScale, lim) {
     
@@ -212,6 +280,3 @@ function setBoundsHeight(name, height, xPos, yPos, renderScale) {
     heightBounds.push(bounds)
     heightBounds.push(secondBounds)
 }
-
-/** @type {Bounds[]} */
-let heightBounds = []

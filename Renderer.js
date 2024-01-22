@@ -36,7 +36,6 @@ spriteNames.forEach((name) => {
     img.src = "./Sprites/" + name
     images[name] = img
 })
-loading = false
 
 var c = document.getElementById("canvas");
 /** @type {CanvasRenderingContext2D} */
@@ -50,8 +49,6 @@ let xPID = new Pid(0.3, 0, 0)
 let yPID = new Pid(0.3, 0, 0)
 
 function render() {
-
-    if (loading) { return; }
 
     c.width = window.innerWidth
     c.height = window.innerHeight
@@ -144,7 +141,6 @@ function render() {
         } catch(err) {}
     })
 
-
     // Render Height Maps
     // let scale = 2
     // for (let x = 0; x < worldBounds.width; x += scale) {
@@ -163,6 +159,14 @@ function render() {
         ctx.fillStyle = "black"
         ctx.font = "20px Pixelify Sans"
         ctx.fillText("Master Screen", 10, 15)
+    }
+
+    if (isMaster && loading) {
+        ctx.fillStyle = "#d9a53d"
+        ctx.fillRect(0, 20, 170, 20)
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Building World", 15, 35)
     }
 }
 

@@ -1,5 +1,6 @@
 let heightMap = []
 function fillHeightMap() {
+    heightMap = []
     for (let x = 0; x < worldBounds.width; x++) {
         let tmp = []
         for (let y = 0; y < worldBounds.height; y++) {
@@ -10,7 +11,7 @@ function fillHeightMap() {
 }
 
 function updateWorld() {
-    console.log("update")
+    // console.log("update")
 
     scene = scene.filter(obj => obj.id !== "--DeleteMe--"); // Delete objects that need deleting 
 
@@ -44,7 +45,11 @@ function updateWorld() {
         if (dist < 5) {
             ball.deleteItem()
             ball_shadow.deleteItem()
-        }
+
+            setTimeout(() => {
+                start()
+            }, 1000);
+        }  
     }
 
     // Ball world collided
@@ -79,6 +84,8 @@ function distBetweenObjs(objectA, objectB) {
 function hitBall(xVel, yVel) {
     let ball = getObjByID("ball")
     if (Math.abs(ball.xVel) + Math.abs(ball.yVel) > 1) { return; }
+    if (ball.height > ball.minHeight + 0.5) { return; }
+
     ball.applyVel(xVel, yVel)
     ball.heightVel = (Math.abs(xVel) + Math.abs(yVel)) / 7;
 }
