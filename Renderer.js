@@ -2,12 +2,16 @@ let renderBiomeScale = 10
 
 let loading = true;
 
+let screenMaxX = 590
+let screenMaxY = 400
+
 // Load the sprites
 let spriteNames = [
     "test.gif",
     "Objects/Flag.png",
     "Objects/Hole.png",
     "Objects/Ball.png",
+    "Objects/Arrow.png",
     "Objects/Ball_Shadow.png",
     "Nature/Grass_Short.png",
     "Nature/Grass_Long.png",
@@ -153,6 +157,30 @@ function render() {
     //     count++
     // }
 
+    if (window.innerWidth > screenMaxX || window.innerHeight > screenMaxY) {
+
+        let xAmt = window.innerWidth - screenMaxX
+        let yAmt = window.innerHeight - screenMaxY
+
+        if (xAmt < 0) { xAmt = 0 }
+        if (yAmt < 0) { yAmt = 0 }
+
+        ctx.globalAlpha = (xAmt + yAmt) / 100
+        ctx.fillStyle = "black"
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+
+        let centerX = window.innerWidth / 2
+        let centerY = window.innerHeight / 2
+
+        ctx.fillStyle = "white"
+        ctx.fillRect(centerX - 100, centerY - 20, 200, 40)    
+        
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Reduce Window Size", centerX - 92, centerY + 7)
+    }
+    ctx.globalAlpha = 1
+
     if (isMaster) {
         ctx.fillStyle = "#d9473d"
         ctx.fillRect(0, 0, 170, 20)
@@ -192,4 +220,9 @@ function lerpColor(a, b, amount) {
         rb = ab + amount * (bb - ab);
 
     return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
+}
+
+
+function lerpValue(start, stop, val) {
+    return start + ((stop - start) * val)
 }
