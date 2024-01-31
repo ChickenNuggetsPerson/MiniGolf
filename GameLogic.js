@@ -10,6 +10,11 @@ function fillHeightMap() {
     }
 }
 
+
+let ballClicked = false;
+let arrowScale = 0;
+let arrowRot = 0;
+
 function updateWorld() {
     // console.log("update")
 
@@ -64,16 +69,29 @@ function updateWorld() {
     let ballScale = 3
     let ballBounds = new Bounds(ball.xPos - (2 * ballScale), ball.yPos - (4 * ballScale), 4 * ballScale, 4 * ballScale)
     let edges = ballBounds.getHeightEdges()
-    if (edges.left > ball.height || edges.right > ball.height) { ball.xVel *= -1 }
-    if (edges.top > ball.height || edges.bottom > ball.height) { ball.yVel *= -1 }
+    if (edges.left > ball.height || edges.right > ball.height) { ball.xVel *= -1; ball.xPos += valPolarity(ball.xVel) * 2 }
+    if (edges.top > ball.height || edges.bottom > ball.height) { ball.yVel *= -1; ball.yPos += valPolarity(ball.yVel) * 2}
 
     ball.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
     ball_shadow.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
+
+    let arrow = getObjByID("arrow")
+    if (ballClicked) {
+        arrow.xPos = ball.xPos
+        arrow.yPos = ball.yPos - 6
+        arrow.scale = arrowScale
+        arrow.rot = arrowRot
+        arrow.height = ball.height
+    } else {
+        // arrow.xPos = -100000000
+        // arrow.yPos = -1
+        arrow.scale = 0
+    }
 }
 
 
 
-
+function valPolarity(input) { return input > 0 ? 1 : -1 }
 function getObjByID(id) { return scene.filter(obj => obj.id === id)[0] }
 function distBetweenObjs(objectA, objectB) {
     let a = objectB.xPos - objectA.xPos
@@ -95,11 +113,29 @@ function mouseDown(x, y) {
     console.log("Down", x, y)   
 
     let ball = getObjByID("ball")
-    hitBall(
-        (x - ball.xPos) * 0.1,
-        (y - ball.yPos) * 0.1
-    )
-    // ball.deleteItem()
+    let dist = distBetweenObjs(ball, {
+        xPos: x,
+        yPos: y
+    })
+
+    // Launch ball
+    if (ballClicked) {
+        ballClicked = false;
+
+        let launchScale = 5;
+        hitBall(
+            Math.cos((arrowRot-90) * (Math.PI/180)) * arrowScale * launchScale,
+            Math.sin((arrowRot-90) * (Math.PI/180)) * arrowScale * launchScale
+        )
+    } else { 
+
+        if (dist > 40) { return; } // Clicked on ball
+        if (ball.xVel + ball.yVel > 10) { return; }
+
+        ballClicked = true;
+    }
+
+
 }
 function mouseUp(x, y) {
     // console.log("Up", x, y)   
@@ -107,5 +143,18 @@ function mouseUp(x, y) {
 function mouseMove(x, y) {
     // console.log("Move", x, y)
     // console.log(heightMap[x][y])
+    // if (!ballClicked) { return; }
 
+    let ball = getObjByID("ball")
+    let dist = distBetweenObjs(ball, {
+        xPos: x,
+        yPos: y
+    })
+
+    if (dist > 200) {
+        dist = 200
+    }
+
+    arrowScale = dist / 32
+    arrowRot = (((Math.atan2(x - ball.xPos, y - ball.yPos + 6 - ball.height) * 180) / Math.PI) + 180) * -1
 }

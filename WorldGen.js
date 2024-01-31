@@ -68,6 +68,12 @@ function setUpWorld() {
             }
         }
     }
+
+    scene.push(
+        new GameObject("Objects/Arrow.png", 50, 50, 0, 5, false, "arrow", -100000)
+    )
+    let arrow = getObjByID("arrow")
+    arrow.alwaysRender = true;
 }
 
 

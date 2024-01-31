@@ -1,4 +1,4 @@
-let renderBiomeScale = 10
+let renderBiomeScale = 15
 
 let loading = true;
 
@@ -65,6 +65,7 @@ function render() {
     yOff -= yPID.iterate(yOff, window.screenTop)
 
 
+    // Create checkerboard pattern
     let count = 0;
     for (let x = 0; x < worldBounds.width; x += renderBiomeScale) {
         for (let y = 0; y < worldBounds.height; y += renderBiomeScale) {
@@ -134,7 +135,7 @@ function render() {
                 ctx.drawImage(
                     images[object.spriteStr], 
                     -width / 2, 
-                    -height, 
+                    -height + object.height, 
                     width, 
                     height
                 )
@@ -156,6 +157,48 @@ function render() {
     //     }
     //     count++
     // }
+
+
+    // Render Ball Arrow
+    {
+        let ball = getObjByID("ball")
+
+        let inScreen = true;
+        if (ball.xPos < window.screenLeft - renderOverlap) { inScreen = false; }
+        if (ball.xPos > window.screenLeft + window.innerWidth + renderOverlap) { inScreen = false; }
+
+        if (ball.yPos < window.screenTop - renderOverlap) { inScreen = false; }
+        if (ball.yPos > window.screenTop + window.innerHeight + renderOverlap) { inScreen = false; }
+
+        if (!inScreen) {
+            let screenMiddle = {
+                x: (window.innerWidth / 2) + xOff,
+                y: (window.innerHeight / 2) + yOff,
+            }
+    
+            const angleInRadians = Math.atan2(ball.xPos - screenMiddle.x, ball.yPos - screenMiddle.y);
+    
+            ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
+            let width = images["Objects/Arrow.png"].naturalWidth * 5
+            let height = images["Objects/Arrow.png"].naturalHeight * 5
+    
+            // Rotate the canvas
+            ctx.rotate(-angleInRadians + Math.PI);
+    
+            ctx.globalAlpha = 1;
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(
+                images["Objects/Arrow.png"], 
+                -width / 2, 
+                -height, 
+                width, 
+                height
+            )
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Canvas 
+        }
+    }
+
+
 
     if (window.innerWidth > screenMaxX || window.innerHeight > screenMaxY) {
 
