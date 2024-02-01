@@ -66,19 +66,23 @@ function render() {
 
 
     // Create checkerboard pattern
-    let count = 0;
+    let yCounter = 0;
     for (let x = 0; x < worldBounds.width; x += renderBiomeScale) {
         for (let y = 0; y < worldBounds.height; y += renderBiomeScale) {
-            if ( count % 2 == 0 ) {
+            if ( yCounter % 2 == 0 ) {
                 ctx.fillStyle = "#55bd39"
             } else {
                 ctx.fillStyle = "#4fad34"
             }
-            ctx.beginPath();
             ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
-            count++
+
+            yCounter++;
         }
-        count++
+        if (x % 2 == 0) {
+            yCounter = 0
+        } else {
+            yCounter = 1
+        }
     }
 
 
@@ -160,44 +164,46 @@ function render() {
 
 
     // Render Ball Arrow
-    {
+    try {
+        
         let ball = getObjByID("ball")
+        let inScreen = 0;
 
-        let inScreen = true;
-        if (ball.xPos < window.screenLeft - renderOverlap) { inScreen = false; }
-        if (ball.xPos > window.screenLeft + window.innerWidth + renderOverlap) { inScreen = false; }
+        if (ball.xPos < window.screenLeft) { inScreen += window.screenLeft - ball.xPos; }
+        if (ball.xPos > window.screenLeft + window.innerWidth) { inScreen += ball.xPos - (window.screenLeft + window.innerWidth); }
 
-        if (ball.yPos < window.screenTop - renderOverlap) { inScreen = false; }
-        if (ball.yPos > window.screenTop + window.innerHeight + renderOverlap) { inScreen = false; }
-
-        if (!inScreen) {
-            let screenMiddle = {
-                x: (window.innerWidth / 2) + xOff,
-                y: (window.innerHeight / 2) + yOff,
-            }
+        if (ball.yPos < window.screenTop) { inScreen += window.screenTop - ball.yPos; }
+        if (ball.yPos > window.screenTop + window.innerHeight) { inScreen += ball.yPos - (window.screenTop + window.innerHeight); }
+        
     
-            const angleInRadians = Math.atan2(ball.xPos - screenMiddle.x, ball.yPos - screenMiddle.y);
-    
-            ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
-            let width = images["Objects/Arrow.png"].naturalWidth * 5
-            let height = images["Objects/Arrow.png"].naturalHeight * 5
-    
-            // Rotate the canvas
-            ctx.rotate(-angleInRadians + Math.PI);
-    
-            ctx.globalAlpha = 1;
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(
-                images["Objects/Arrow.png"], 
-                -width / 2, 
-                -height, 
-                width, 
-                height
-            )
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Canvas 
+        let screenMiddle = {
+            x: (window.innerWidth / 2) + xOff,
+            y: (window.innerHeight / 2) + yOff,
         }
-    }
 
+        const angleInRadians = Math.atan2(ball.xPos - screenMiddle.x, ball.yPos - screenMiddle.y);
+
+        ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
+        let width = images["Objects/Arrow.png"].naturalWidth * 5
+        let height = images["Objects/Arrow.png"].naturalHeight * 5
+
+        // Rotate the canvas
+        ctx.rotate(-angleInRadians + Math.PI);
+
+        ctx.globalAlpha = inScreen / 100
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(
+            images["Objects/Arrow.png"], 
+            -width / 2, 
+            -height, 
+            width, 
+            height
+        )
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Canvas 
+    
+    } catch (err) {}
+
+    ctx.globalAlpha = 1
 
 
     if (window.innerWidth > screenMaxX || window.innerHeight > screenMaxY) {
