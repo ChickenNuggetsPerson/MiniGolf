@@ -53,6 +53,11 @@ class WindowManager {
             ))
         });
         addEventListener("click", (event) => {
+            if (!this.isAliveAdd(0, 100)) {
+                location.replace(location.href);
+                return;
+            }
+
             localStorage.setItem(this.mouseCBPrefix + this.mouseDownType, JSON.stringify(
                 {
                     x: event.x + window.screenLeft,
@@ -73,6 +78,9 @@ class WindowManager {
     // Returns true if the window is alive
     isAlive(winNum) { 
         return localStorage.getItem(winNum + this.lifeSuffix) > new Date().getTime()
+    }
+    isAliveAdd(winNum, additionalTimeout) { 
+        return parseInt(localStorage.getItem(winNum + this.lifeSuffix)) + additionalTimeout > new Date().getTime()
     }
 
     updateLife() {

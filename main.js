@@ -23,19 +23,24 @@ setInterval(() => {
 
 // Render code
 setInterval(() => {
-    // try {
-        render();
-    // } catch (error) {console.log(error)}
+    render();
 }, 20);
 
 
 if (isMaster) {
+    masterLogic()
+}
+
+async function masterLogic() {
+    await titleMenu()
+
     start()
     setInterval(() => {
         updateWorld()
     }, 20);
 }
 
+// Starts the scene
 function start() {
     scene = []
     seed = Math.random() * 10;
@@ -57,6 +62,34 @@ function start() {
         }, 20);
 
     }, 500);
+}
+
+async function titleMenu() {
+    return new Promise((resolve) => {
+        loading = false;
+
+        scene.push(new GameObject("Logo/Logo.png", 500, 500, 0, 0.5, false, "logo", -101))
+        let logo = getObjByID("logo")
+        logo.alwaysRender = true
+
+        scene.push(new GameObject("Logo/LogoBack.png", 500, 500, 0, 1.5, false, "logoBack", -100))
+        let logoBack = getObjByID("logoBack")
+        logoBack.alwaysRender = true
+
+
+        let id = setInterval(() => {
+            logo.xPos = xOff + window.innerWidth / 2
+            logo.yPos = ( yOff + window.innerHeight / 2 ) + 65
+
+            logoBack.xPos = xOff + window.innerWidth / 2
+            logoBack.yPos = ( yOff + window.innerHeight / 2 ) + 200
+        }, 20);
+
+        addEventListener("click", (event) => {
+            clearInterval(id)
+            resolve()
+        })
+    })
 }
 
 

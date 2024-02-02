@@ -8,6 +8,10 @@ let screenMaxY = 400
 // Load the sprites
 let spriteNames = [
     "test.gif",
+
+    "Logo/Logo.png",
+    "Logo/LogoBack.png",
+
     "Objects/Flag.png",
     "Objects/Hole.png",
     "Objects/Ball.png",
@@ -63,6 +67,30 @@ function render() {
 
     xOff -= xPID.iterate(xOff, window.screenLeft)
     yOff -= yPID.iterate(yOff, window.screenTop)
+
+
+    // If the master screen is not alive
+    // blank the screen
+    if (!windowManager.isAliveAdd(0, 100)) {
+
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "black"
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+
+        let centerX = window.innerWidth / 2
+        let centerY = window.innerHeight / 2
+
+        ctx.fillStyle = "white"
+        ctx.fillRect(centerX - 100, centerY - 20, 200, 40)    
+        
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("No Master Screen", centerX - 88, centerY + 7)
+        
+        console.log("asdfasf")
+
+        return
+    }
 
 
     // Create checkerboard pattern
