@@ -10,10 +10,14 @@ function fillHeightMap() {
     }
 }
 
+let ballHitCount = 0;
+let lastHitTime = new Date()
 
 let ballClicked = false;
 let arrowScale = 0;
 let arrowRot = 0;
+let arrowWobble = 0;
+let wobbleRot = 0;
 
 function updateWorld() {
     // console.log("update")
@@ -69,19 +73,26 @@ function updateWorld() {
     let ballScale = 3
     let ballBounds = new Bounds(ball.xPos - (2 * ballScale), ball.yPos - (4 * ballScale), 4 * ballScale, 4 * ballScale)
     let edges = ballBounds.getHeightEdges()
-    if (edges.left > ball.height || edges.right > ball.height) { ball.xVel *= -1; ball.xPos += valPolarity(ball.xVel) * 2 }
-    if (edges.top > ball.height || edges.bottom > ball.height) { ball.yVel *= -1; ball.yPos += valPolarity(ball.yVel) * 2}
+    
+    if (edges.left > ball.height) { ball.xVel = Math.abs(ball.xVel); ball.xPos += 2}
+    if (edges.right > ball.height) { ball.xVel = Math.abs(ball.xVel) * -1; ball.xPos += -2}
+
+    if (edges.top > ball.height) { ball.yVel = Math.abs(ball.yVel); ball.yPos += 2}
+    if (edges.bottom > ball.height) { ball.yVel = Math.abs(ball.yVel) * -1; ball.yPos += -2}
+
+    
 
     ball.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
     ball_shadow.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
 
+    // Update Arrow
     let arrow = getObjByID("arrow")
     if (ballClicked) {
         arrow.xPos = ball.xPos
-        arrow.yPos = ball.yPos - 6
+        arrow.yPos = ball.yPos - 6 - ball.height
         arrow.scale = arrowScale
-        arrow.rot = arrowRot
-        arrow.height = ball.height
+        wobbleRot = Math.cos(new Date().getTime() / 200) * (arrowWobble / 50)
+        arrow.rot = arrowRot + wobbleRot
     } else {
         // arrow.xPos = -100000000
         // arrow.yPos = -1
@@ -123,10 +134,14 @@ function mouseDown(x, y) {
         ballClicked = false;
 
         let launchScale = 5;
+
+        arrowRot = arrowRot + wobbleRot
         hitBall(
             Math.cos((arrowRot-90) * (Math.PI/180)) * arrowScale * launchScale,
             Math.sin((arrowRot-90) * (Math.PI/180)) * arrowScale * launchScale
         )
+        ballHitCount++;
+        lastHitTime = new Date()
     } else { 
 
         if (dist > 40) { return; } // Clicked on ball
@@ -151,6 +166,11 @@ function mouseMove(x, y) {
         yPos: y
     })
 
+    if (dist > 250) {
+        arrowWobble = dist - 250
+    } else {
+        arrowWobble = 0
+    }
     if (dist > 200) {
         dist = 200
     }

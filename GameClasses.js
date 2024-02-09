@@ -56,6 +56,12 @@ class GameObject {
         this.xPos += this.xVel;
         this.yPos += this.yVel;
 
+        // More drag for being on top of platform
+        if (this.height < this.minHeight + 1 && this.height > 3) {
+            this.xVel *= 0.95;
+            this.yVel *= 0.95;    
+        }
+
         this.xVel *= this.drag;
         this.yVel *= this.drag;
 
@@ -113,5 +119,12 @@ class Bounds {
             left: heightMap[Math.floor(this.x1)][centerY],
             right: heightMap[Math.floor(this.x2)][centerY]
         };
+    }
+    loopThrough(cb) {
+        for (let x = this.x1; x < this.x2; x++) {
+            for (let y = this.y1; y < this.y2; y++) {
+                cb(x, y)
+            }
+        }
     }
 }

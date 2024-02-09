@@ -1,6 +1,7 @@
 let renderBiomeScale = 15
 
 let loading = true;
+let titleScreen = false;
 
 let screenMaxX = 590
 let screenMaxY = 400
@@ -11,6 +12,7 @@ let spriteNames = [
 
     "Logo/Logo.png",
     "Logo/LogoBack.png",
+    "Logo/ClickToPlay.png",
 
     "Objects/Flag.png",
     "Objects/Hole.png",
@@ -86,8 +88,6 @@ function render() {
         ctx.fillStyle = "black"
         ctx.font = "20px Pixelify Sans"
         ctx.fillText("No Master Screen", centerX - 88, centerY + 7)
-        
-        console.log("asdfasf")
 
         return
     }
@@ -114,10 +114,12 @@ function render() {
     }
 
 
-    let renderOverlap = 100
+    let renderOverlap = 150
 
     scene.forEach((object) => {
         try {
+
+            // Check for the object out of screen
             if (!object.alwaysRender) {
                 if (object.xPos < window.screenLeft - renderOverlap) { return; }
                 if (object.xPos > window.screenLeft + window.innerWidth + renderOverlap) { return; }
@@ -146,8 +148,8 @@ function render() {
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(
                     images[object.spriteStr], 
-                    object.xPos - xOff - width / 2, 
-                    object.yPos - yOff - height - object.minHeight, 
+                    object.xPos - xOff - width / 2 , 
+                    object.yPos - yOff - height - object.minHeight + 2, 
                     width, 
                     height
                 )
@@ -180,60 +182,83 @@ function render() {
 
     // Render Height Maps
     // let scale = 2
-    // for (let x = 0; x < worldBounds.width; x += scale) {
-    //     for (let y = 0; y < worldBounds.height; y += scale) {
+    // for (let x = window.screenLeft; x < window.screenLeft + window.innerWidth; x += scale) {
+    //     for (let y = window.screenTop; y < window.screenTop + window.innerHeight; y += scale) {
+
     //         ctx.fillStyle = lerpColor("#000000", "#ffffff", heightMap[x][y] / 8)
     //         ctx.globalAlpha = 0.4
     //         ctx.fillRect(x - xOff - scale/2, y - yOff - scale/2, scale, scale)
-    //         count++
     //     }
-    //     count++
     // }
 
 
     // Render Ball Arrow
     try {
-        
-        let ball = getObjByID("ball")
-        let inScreen = 0;
+        if (isMaster) {
+            let ball = getObjByID("ball")
+            let inScreen = 0;
 
-        if (ball.xPos < window.screenLeft) { inScreen += window.screenLeft - ball.xPos; }
-        if (ball.xPos > window.screenLeft + window.innerWidth) { inScreen += ball.xPos - (window.screenLeft + window.innerWidth); }
+            if (ball.xPos < window.screenLeft) { inScreen += window.screenLeft - ball.xPos; }
+            if (ball.xPos > window.screenLeft + window.innerWidth) { inScreen += ball.xPos - (window.screenLeft + window.innerWidth); }
 
-        if (ball.yPos < window.screenTop) { inScreen += window.screenTop - ball.yPos; }
-        if (ball.yPos > window.screenTop + window.innerHeight) { inScreen += ball.yPos - (window.screenTop + window.innerHeight); }
+            if (ball.yPos < window.screenTop) { inScreen += window.screenTop - ball.yPos; }
+            if (ball.yPos > window.screenTop + window.innerHeight) { inScreen += ball.yPos - (window.screenTop + window.innerHeight); }
+            if (inScreen > 100) { inScreen = 100 }
         
-    
-        let screenMiddle = {
-            x: (window.innerWidth / 2) + xOff,
-            y: (window.innerHeight / 2) + yOff,
+            let screenMiddle = {
+                x: (window.innerWidth / 2) + xOff,
+                y: (window.innerHeight / 2) + yOff,
+            }
+
+            const angleInRadians = Math.atan2(ball.xPos - screenMiddle.x, ball.yPos - screenMiddle.y);
+
+            ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
+            let width = images["Objects/Arrow.png"].naturalWidth * 5
+            let height = images["Objects/Arrow.png"].naturalHeight * 5
+
+            // Rotate the canvas
+            ctx.rotate(-angleInRadians + Math.PI);
+
+            let alpha = inScreen / 100
+            let fadeIn = ( new Date().getTime() - lastHitTime.getTime() - 10000 ) / 10000 
+
+            if (alpha > fadeIn) { alpha = fadeIn }
+            if (alpha < 0) { alpha = 0 }
+            console.log(alpha)
+
+            ctx.globalAlpha = alpha
+
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(
+                images["Objects/Arrow.png"], 
+                -width / 2, 
+                -height, 
+                width, 
+                height
+            )
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Canvas 
         }
-
-        const angleInRadians = Math.atan2(ball.xPos - screenMiddle.x, ball.yPos - screenMiddle.y);
-
-        ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
-        let width = images["Objects/Arrow.png"].naturalWidth * 5
-        let height = images["Objects/Arrow.png"].naturalHeight * 5
-
-        // Rotate the canvas
-        ctx.rotate(-angleInRadians + Math.PI);
-
-        ctx.globalAlpha = inScreen / 100
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(
-            images["Objects/Arrow.png"], 
-            -width / 2, 
-            -height, 
-            width, 
-            height
-        )
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Canvas 
-    
     } catch (err) {}
 
     ctx.globalAlpha = 1
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
+    // Render Ball Hit Count
+    if (isMaster && !titleScreen) {
+        ctx.fillStyle = "#d3e8d6"
+        ctx.beginPath();
+        ctx.roundRect(0, window.innerHeight - 50, 75 + getHitScale(ballHitCount) * 7, 50, 10)
+        ctx.globalAlpha = 0.5
+        ctx.fill()
 
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Hits: " + ballHitCount, 5, window.innerHeight - 30)
+        ctx.fillText("Par: " + holePar, 5, window.innerHeight - 5)
+    }
+
+    // Render "Reduce Window Size"
     if (window.innerWidth > screenMaxX || window.innerHeight > screenMaxY) {
 
         let xAmt = window.innerWidth - screenMaxX
@@ -256,8 +281,10 @@ function render() {
         ctx.font = "20px Pixelify Sans"
         ctx.fillText("Reduce Window Size", centerX - 92, centerY + 7)
     }
+
     ctx.globalAlpha = 1
 
+    // Render master screen text
     if (isMaster) {
         ctx.fillStyle = "#d9473d"
         ctx.fillRect(0, 0, 170, 20)
@@ -266,6 +293,7 @@ function render() {
         ctx.fillText("Master Screen", 10, 15)
     }
 
+    // Render loading text
     if (isMaster && loading) {
         ctx.fillStyle = "#d9a53d"
         ctx.fillRect(0, 20, 170, 20)
@@ -302,4 +330,14 @@ function lerpColor(a, b, amount) {
 
 function lerpValue(start, stop, val) {
     return start + ((stop - start) * val)
+}
+
+function getHitScale(input) {
+    if (input < 10) {
+        return 0
+    }
+    if (input < 100) {
+        return 1;
+    }
+    return 2
 }

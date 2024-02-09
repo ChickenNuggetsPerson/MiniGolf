@@ -13,7 +13,13 @@ setInterval(() => {
     try {
         if (isMaster) {
             scene.sort((a, b) => b.zIndex - a.zIndex); // Sort the scene by zIndex
-            windowManager.setSendData(JSON.stringify(scene))
+            if (titleScreen) {
+                windowManager.setSendData(JSON.stringify([]))
+            } else {
+                windowManager.setSendData(JSON.stringify(scene))
+            }
+            
+
         } else {
             scene = JSON.parse(windowManager.getRecievedData())
         }
@@ -44,6 +50,7 @@ async function masterLogic() {
 function start() {
     scene = []
     seed = Math.random() * 10;
+    ballHitCount = 0;
     
     loading = true;
 
@@ -57,6 +64,7 @@ function start() {
         setTimeout(() => {
             genHeightMaps();
             spawnBallAndGoal();
+            lastHitTime = new Date()
 
             loading = false;
         }, 20);
@@ -67,56 +75,71 @@ function start() {
 async function titleMenu() {
     return new Promise((resolve) => {
         loading = false;
+        titleScreen = true;
 
         scene.push(new GameObject("Logo/Logo.png", 500, 500, 0, 0.5, false, "logo", -101))
         let logo = getObjByID("logo")
         logo.alwaysRender = true
 
-        scene.push(new GameObject("Logo/LogoBack.png", 500, 500, 0, 1.5, false, "logoBack", -100))
+        scene.push(new GameObject("Logo/LogoBack.png", 500, 500, 0, 1.75, false, "logoBack", -100))
         let logoBack = getObjByID("logoBack")
         logoBack.alwaysRender = true
 
+        scene.push(new GameObject("Logo/ClickToPlay.png", 500, 500, 0, 0.2, false, "clickToPlay", -102))
+        let clickToPlay = getObjByID("clickToPlay")
+        clickToPlay.alwaysRender = true;
 
         let id = setInterval(() => {
-            logo.xPos = xOff + window.innerWidth / 2
-            logo.yPos = ( yOff + window.innerHeight / 2 ) + 65
+            let centerX = xOff + window.innerWidth / 2
+            let centerY = ( yOff + window.innerHeight / 2 )
 
-            logoBack.xPos = xOff + window.innerWidth / 2
-            logoBack.yPos = ( yOff + window.innerHeight / 2 ) + 200
+            logo.xPos = centerX
+            logo.yPos = centerY + 10
+
+            logoBack.xPos = centerX
+            logoBack.yPos = centerY + 200
+
+            clickToPlay.xPos = centerX
+            clickToPlay.yPos = centerY + 150
+            clickToPlay.scale = (Math.cos(new Date().getTime() / 1000) + 3) * 0.08
         }, 20);
 
         addEventListener("click", (event) => {
             clearInterval(id)
+            titleScreen = false;
             resolve()
         })
     })
 }
 
 
-// Setup Biome Transpher
-// if (!isMaster) {
-//     fillBiome()
-//     setInterval(() => {
-//         let newBiome = JSON.parse(localStorage.getItem("biome"))
-//         biome[newBiome.x] = newBiome.val
-//     }, 2);
-// }
-
-// let biomeSendX = 0;
-// let biomeSendY = 0;
-// if (isMaster) { // Send Biome data
-//     setInterval(() => {
-//         if (biomeSendX >= worldBounds.width) {
-//             biomeSendX = 0;
-//         }
-//         localStorage.setItem("biome", JSON.stringify({
-//             x: biomeSendX,
-//             val: biome[biomeSendX]
-//         }))
-
-//         biomeSendX += 1;
-//     }, 5);
-// }
+// Biome Transpher
+if (false) {
+    if (!isMaster) {
+        fillBiome()
+        setInterval(() => {
+            let newBiome = JSON.parse(localStorage.getItem("biome"))
+            biome[newBiome.x] = newBiome.val
+        }, 2);
+    }
+    
+    let biomeSendX = 0;
+    let biomeSendY = 0;
+    if (isMaster) { // Send Biome data
+        setInterval(() => {
+            if (biomeSendX >= worldBounds.width) {
+                biomeSendX = 0;
+            }
+            localStorage.setItem("biome", JSON.stringify({
+                x: biomeSendX,
+                val: biome[biomeSendX]
+            }))
+    
+            biomeSendX += 1;
+        }, 5);
+    }
+    
+}
 
 
 
