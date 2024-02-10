@@ -1,11 +1,6 @@
-let audioStorage = {}
 
-let audioNames = [
-    "HardHit1.wav",
-    "HardHit2.wav",
-    "HardHit3.wav"
-]
 
+let soundMult = 2
 
 function playAudioSpatial(name, soundLevel, x, y, z) {
     // audioStorage[name].volume = soundLevel
@@ -14,25 +9,35 @@ function playAudioSpatial(name, soundLevel, x, y, z) {
 
     let sound = new Howl({
         src: ["Audio/" + name],
-        volume: soundLevel * 2,
+        volume: soundLevel * 2 * soundMult,
         autoplay: true,
     });
     sound.pos(
-        ((x - (worldBounds.width / 2)) / (worldBounds.width)) * 2, 
+        ((x - (worldBounds.width / 2)) / (worldBounds.width)) * 0.4, 
         z,
-        ((y - (worldBounds.height / 2)) / (worldBounds.height)) * 2, 
-        
+        ((y - (worldBounds.height / 2)) / (worldBounds.height)) * 0.4, 
     )
+    
 }
 function playAudio(name, soundLevel) {
-    // audioStorage[name].volume = soundLevel
-    // audioStorage[name].play()
+
     if (soundLevel < 0.1) { return; }
     
     new Howl({
         src: ["Audio/" + name],
-        volume: soundLevel,
+        volume: soundLevel * soundMult,
         autoplay: true,
+    });
+}
+function playAudioStream(name, soundLevel) {
+
+    if (soundLevel < 0.1) { return; }
+    
+    new Howl({
+        src: ["Audio/" + name],
+        volume: soundLevel * soundMult,
+        autoplay: true,
+        html5: true
     });
 }
 
@@ -44,17 +49,15 @@ function playGrassHit(level, x, y) {
 }
 
 
-/** @type {Audio[]} */
-let ambiance = []
 
 let ambianceSystemID = 0;
 function startAmbiance() {
     stopAmbiance()
     
-    playAudio("Ambiance/nature1.wav", 0.3)
+    playAudioStream("Ambiance/nature1.wav", 0.3)
 
     ambianceSystemID = setInterval(() => {
-        playAudio("Ambiance/nature1.wav", 0.3)
+        playAudioStream("Ambiance/nature1.wav", 0.3)
     }, 1000 * 60);
 }
 function stopAmbiance() {

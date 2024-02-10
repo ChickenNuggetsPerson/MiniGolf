@@ -6,7 +6,7 @@ windowManager.addCallbacks(mouseMove, mouseDown, mouseUp)
 let scene = [];
 
 let biome = [];
-let seed = Math.random() * 10;
+let seed = Math.random() * 100;
 
 // Scene update code
 setInterval(() => {
@@ -16,21 +16,29 @@ setInterval(() => {
             if (titleScreen) {
                 windowManager.setSendData(JSON.stringify({
                     scene: [],
-                    bounds: worldBounds
+                    bounds: worldBounds,
+                    par: 0,
+                    hits: 0
                 }))
             } else {
                 windowManager.setSendData(JSON.stringify({
                     scene: scene,
                     bounds: worldBounds,
+                    par: holePar,
+                    hits: ballHitCount
                 }))
             }
             
-
         } else {
             let data = JSON.parse(windowManager.getRecievedData())
             scene = data.scene
             worldBounds = data.bounds
+            holePar = data.par
+            ballHitCount = data.hits
         }
+
+        document.title = `Par: ${holePar} - Hits: ${ballHitCount}`
+
     } catch(err) { console.warn(err) }
 }, 20);
 

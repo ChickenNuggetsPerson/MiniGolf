@@ -81,11 +81,11 @@ function updateWorld() {
     }
 
     // Ball world collided
-    if (ball.xPos < worldBounds.x1) { ball.xPos = worldBounds.x1 + 2; ball.xVel *= -1; }
-    if (ball.xPos > worldBounds.x2) { ball.xPos = worldBounds.x2 - 2; ball.xVel *= -1; }
+    if (ball.xPos < worldBounds.x1) { ball.xPos = worldBounds.x1 + 2; ball.xVel *= -1; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
+    if (ball.xPos > worldBounds.x2) { ball.xPos = worldBounds.x2 - 2; ball.xVel *= -1; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
 
-    if (ball.yPos < worldBounds.y1) { ball.yPos = worldBounds.y1 + 2; ball.yVel *= -1; }
-    if (ball.yPos > worldBounds.y2) { ball.yPos = worldBounds.y2 - 2; ball.yVel *= -1; }
+    if (ball.yPos < worldBounds.y1) { ball.yPos = worldBounds.y1 + 2; ball.yVel *= -1; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
+    if (ball.yPos > worldBounds.y2) { ball.yPos = worldBounds.y2 - 2; ball.yVel *= -1; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
 
 
     // Ball Wall Colide

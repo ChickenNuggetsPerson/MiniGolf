@@ -243,21 +243,6 @@ function render() {
     ctx.globalAlpha = 1
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    // Render Ball Hit Count
-    if (isMaster && !titleScreen) {
-        ctx.fillStyle = "#d3e8d6"
-        ctx.beginPath();
-        ctx.roundRect(0, window.innerHeight - 50, 75 + getHitScale(ballHitCount) * 7, 50, 10)
-        ctx.globalAlpha = 0.5
-        ctx.fill()
-
-        ctx.globalAlpha = 1
-        ctx.fillStyle = "black"
-        ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Hits: " + ballHitCount, 5, window.innerHeight - 30)
-        ctx.fillText("Par: " + holePar, 5, window.innerHeight - 5)
-    }
-
     // Render "Reduce Window Size"
     if (window.innerWidth > screenMaxX || window.innerHeight > screenMaxY) {
 
