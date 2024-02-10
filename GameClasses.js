@@ -78,6 +78,15 @@ class GameObject {
         }
         if (this.height <= this.minHeight + 0.05) {
             this.heightVel *= -0.5
+            
+            if (this.heightVel > 1) {
+                if (this.minHeight > 1) {
+                    playHardHit(this.heightVel / 10, this.xPos, this.yPos)
+                } else {
+                    playGrassHit(this.heightVel / 10, this.xPos, this.yPos)
+                }
+            }
+            
         }
 
         if (this.height < this.minHeight) {
@@ -127,4 +136,35 @@ class Bounds {
             }
         }
     }
+    loopThroughScale(cb, scale) {
+        for (let x = this.x1; x < this.x2; x += scale) {
+            for (let y = this.y1; y < this.y2; y += scale) {
+                cb(x, y)
+            }
+        }
+    }
 }
+
+
+class PositionStorage {
+    positions = []
+    bounds = new Bounds()
+    
+    constructor(bounds) { this.bounds = bounds }
+
+    addPoint(x, y) {
+        this.positions.push({ x: x, y: y })
+    }
+    hasPoint(x, y) {
+        if (!this.bounds.inBounds(x, y)) { return true; }
+
+        let contains = false;
+        this.positions.forEach((pos) => {
+            if (pos.x == x && pos.y == y) {
+                contains = true
+            }
+        })
+
+        return contains;
+    }
+};

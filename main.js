@@ -14,14 +14,22 @@ setInterval(() => {
         if (isMaster) {
             scene.sort((a, b) => b.zIndex - a.zIndex); // Sort the scene by zIndex
             if (titleScreen) {
-                windowManager.setSendData(JSON.stringify([]))
+                windowManager.setSendData(JSON.stringify({
+                    scene: [],
+                    bounds: worldBounds
+                }))
             } else {
-                windowManager.setSendData(JSON.stringify(scene))
+                windowManager.setSendData(JSON.stringify({
+                    scene: scene,
+                    bounds: worldBounds,
+                }))
             }
             
 
         } else {
-            scene = JSON.parse(windowManager.getRecievedData())
+            let data = JSON.parse(windowManager.getRecievedData())
+            scene = data.scene
+            worldBounds = data.bounds
         }
     } catch(err) { console.warn(err) }
 }, 20);
@@ -41,6 +49,8 @@ async function masterLogic() {
     await titleMenu()
 
     start()
+    startAmbiance()
+
     setInterval(() => {
         updateWorld()
     }, 20);
@@ -53,6 +63,7 @@ function start() {
     ballHitCount = 0;
     
     loading = true;
+    wobbleGoal = false;
 
     setTimeout(() => {
 
@@ -147,6 +158,7 @@ function genBiome() {
     biome = []
 
     let borderWidth = 80;
+    let bottomAdd = 90
 
     for (let x = 0; x < worldBounds.width; x++) {
         let tmp = []
@@ -154,7 +166,7 @@ function genBiome() {
 
             let inBounds = false;
             if (x < borderWidth || x > worldBounds.width - borderWidth) { inBounds = true; }
-            if (y < borderWidth || y > worldBounds.height - borderWidth) { inBounds = true; }
+            if (y < borderWidth || y > worldBounds.height - borderWidth - bottomAdd) { inBounds = true; }
             
             if (inBounds) {
                 tmp.push(2) // Force the borders to be walls
@@ -162,6 +174,7 @@ function genBiome() {
                 tmp.push(
                     // Math.floor(PerlinNoise.noise(x / 700, y / 700, seed) * 10) / 10
                     PerlinNoise.noise(x / 500, y / 500, seed)
+                    // PerlinNoise.noise(x / 250, y / 250, seed)
                 )
             }
 

@@ -19,6 +19,10 @@ let arrowRot = 0;
 let arrowWobble = 0;
 let wobbleRot = 0;
 
+let wobbleGoal = false;
+let wobbleGoalStart = new Date()
+let wobbleGoalScaleDown = 1
+
 function updateWorld() {
     // console.log("update")
 
@@ -34,31 +38,46 @@ function updateWorld() {
     let ball = getObjByID("ball")
     let ball_shadow = getObjByID("ball_shadow")
     let hole = getObjByID("hole")
-
-    // Ball Shadow follow
-    ball_shadow.xPos = ball.xPos
-    ball_shadow.yPos = ball.yPos
     
-    if (ball.height < 1) {
-        // Ball - Hole Physics
-        let dist = distBetweenObjs(ball, {
-            xPos: hole.xPos,
-            yPos: hole.yPos - 5
-        })
-        if (dist < 20) {
-            ball.applyVel(
-                (hole.xPos - ball.xPos) * 0.01,
-                (hole.yPos - ball.yPos) * 0.01
-            )
-        }
-        if (dist < 5) {
-            ball.deleteItem()
-            ball_shadow.deleteItem()
+    try {
 
-            setTimeout(() => {
-                start()
-            }, 1000);
-        }  
+        // Ball Shadow follow
+        ball_shadow.xPos = ball.xPos
+        ball_shadow.yPos = ball.yPos
+        
+        if (ball.height < 1) {
+            // Ball - Hole Physics
+            let dist = distBetweenObjs(ball, {
+                xPos: hole.xPos,
+                yPos: hole.yPos - 5
+            })
+            if (dist < 20) {
+                ball.applyVel(
+                    (hole.xPos - ball.xPos) * 0.01,
+                    (hole.yPos - ball.yPos) * 0.01
+                )
+            }
+            if (dist < 5) {
+                ball.deleteItem()
+                ball_shadow.deleteItem()
+
+                let flag = getObjByID("flag")
+                playAudioSpatial("Goal.mp3", 0.6, flag.xPos, flag.yPos, 10)
+                wobbleGoal = true;
+                wobbleGoalStart = new Date()
+                wobbleGoalScaleDown = 1
+
+                setTimeout(() => {
+                    start()
+                }, 1000);
+            }  
+        }
+    } catch(err) {}
+
+    if (wobbleGoal) {
+        let flag = getObjByID("flag")
+        flag.rot = Math.sin((new Date().getTime() - wobbleGoalStart.getTime()) / 100) * 5 * wobbleGoalScaleDown
+        wobbleGoalScaleDown -= 0.02
     }
 
     // Ball world collided
@@ -70,16 +89,17 @@ function updateWorld() {
 
 
     // Ball Wall Colide
-    let ballScale = 3
-    let ballBounds = new Bounds(ball.xPos - (2 * ballScale), ball.yPos - (4 * ballScale), 4 * ballScale, 4 * ballScale)
-    let edges = ballBounds.getHeightEdges()
+    try {
+        let ballScale = 3
+        let ballBounds = new Bounds(ball.xPos - (2 * ballScale), ball.yPos - (4 * ballScale), 4 * ballScale, 4 * ballScale)
+        let edges = ballBounds.getHeightEdges()
+        
+        if (edges.left > ball.height) { ball.xVel = Math.abs(ball.xVel); ball.xPos += 2;        playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
+        if (edges.right > ball.height) { ball.xVel = Math.abs(ball.xVel) * -1; ball.xPos += -2; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
     
-    if (edges.left > ball.height) { ball.xVel = Math.abs(ball.xVel); ball.xPos += 2}
-    if (edges.right > ball.height) { ball.xVel = Math.abs(ball.xVel) * -1; ball.xPos += -2}
-
-    if (edges.top > ball.height) { ball.yVel = Math.abs(ball.yVel); ball.yPos += 2}
-    if (edges.bottom > ball.height) { ball.yVel = Math.abs(ball.yVel) * -1; ball.yPos += -2}
-
+        if (edges.top > ball.height) { ball.yVel = Math.abs(ball.yVel); ball.yPos += 2;          playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
+        if (edges.bottom > ball.height) { ball.yVel = Math.abs(ball.yVel) * -1; ball.yPos += -2; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
+    } catch(err) {}
     
 
     ball.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
@@ -98,6 +118,10 @@ function updateWorld() {
         // arrow.yPos = -1
         arrow.scale = 0
     }
+
+
+
+
 }
 
 
@@ -156,6 +180,9 @@ function mouseUp(x, y) {
     // console.log("Up", x, y)   
 }
 function mouseMove(x, y) {
+
+    // console.log(maxHeightInSurroundings({x, y}, 80))
+
     // console.log("Move", x, y)
     // console.log(heightMap[x][y])
     // if (!ballClicked) { return; }

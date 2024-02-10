@@ -1,4 +1,4 @@
-let worldBounds = new Bounds(0, 0, window.screen.availWidth, window.screen.availHeight) // Screen Space 
+let worldBounds = new Bounds(0, 0, window.screen.availWidth, window.screen.availHeight + 96) // Screen Space 
 
 let holePar = 0;
 
@@ -8,66 +8,34 @@ let heightBounds = []
 function setUpWorld() {
     heightBounds = []
 
-    // Build Grass
-    // let grassLimit = 0.55
-    // for (let x = 0; x < worldBounds.width; x += 20) {
-    //     for (let y = 0; y < worldBounds.height; y += 10) {
-            
-    //         if (biome[x][y] > grassLimit) { // Large Grass Patches
-    //             let canPlace = true;
-
-    //             try {
-    //                 let lookOff = 50;
-    //                 if (biome[x + lookOff][y] < grassLimit) { canPlace = false; }
-    //                 if (biome[x - lookOff][y] < grassLimit) { canPlace = false; }
-    //                 if (biome[x][y + lookOff] < grassLimit) { canPlace = false; }
-    //                 if (biome[x][y - lookOff] < grassLimit) { canPlace = false; }
-    //             } catch(err) {}
-
-    //             let xoffset = (Math.random() * 5) - 10
-    //             let yoffset = (Math.random() * 10)
-                
-    //             if (!canPlace) { continue;}
-    //             scene.push(
-    //                 new GameObject("Nature/Grass_Short.png",
-    //                     x + xoffset,
-    //                     y + yoffset,
-    //                     Math.random() * 15 - 7.5,
-    //                     1.5, 
-    //                     false,
-    //                     "",
-    //                 )
-    //             )
-    //         }
-    //     }
-    // }
-
     // Add Borders
     let borderLimt = 0.5
 
-    for (let x = 0; x < worldBounds.width; x += 32) {
-        for (let y = 0; y < worldBounds.height; y += 32) {
-            
-            if (biome[x][y] > borderLimt) { // Large Grass Patches
-                
-                let name = borderName(x, y, 32, borderLimt)
-                setBoundsHeight(name, 8, x, y, 2)
-
-                scene.push(
-                    new GameObject("Borders/LongGrass/" + name + ".png",
-                        x,
-                        y,
-                        0,
-                        2.05, 
-                        false,
-                        "", 
-                        1
-                    )
-                )
-
-            }
+    // Add wall points to posSystem
+    let posSystem = new PositionStorage(worldBounds)
+    worldBounds.loopThroughScale((x, y) => {
+        if (biome[x][y] > borderLimt) { // Large Grass Patches
+            posSystem.addPoint(x, y)
         }
-    }
+    }, 32)
+    // Loop through system and assign wall types
+    posSystem.positions.forEach((pos) => {
+        let name = borderName(pos.x, pos.y, 32, posSystem)
+        setBoundsHeight(name, 8, pos.x, pos.y, 2)
+
+        scene.push(
+            new GameObject("Borders/LongGrass/" + name + ".png",
+                pos.x,
+                pos.y,
+                0,
+                2.05, 
+                false,
+                "", 
+                1
+            )
+        )
+    })
+
 
     scene.push(
         new GameObject("Objects/Arrow.png", 50, 50, 0, 5, false, "arrow", -100000)
@@ -81,7 +49,7 @@ function spawnBallAndGoal() {
 
     let flagPos = findRandomGrassLocation(100, 80)
 
-    scene.push(new GameObject("Objects/Flag.png", flagPos.x, flagPos.y + 1, 0, 2))
+    scene.push(new GameObject("Objects/Flag.png", flagPos.x, flagPos.y + 1, 0, 2, false, "flag"))
     scene.push(new GameObject("Objects/Hole.png", flagPos.x, flagPos.y, 0, 2, false, "hole"))
     getObjByID("hole").zIndex = -100
 
@@ -91,6 +59,7 @@ function spawnBallAndGoal() {
     scene.push(new GameObject("Objects/Ball.png", ballLoc.loc.x, ballLoc.loc.y, 0, ballScale, true, "ball"))
     scene.push(new GameObject("Objects/Ball_Shadow.png", ballLoc.loc.x, ballLoc.loc.y, 0, ballScale, false, "ball_shadow"))
     getObjByID("ball").drag = 0.95
+    getObjByID("ball").height = 200
     getObjByID("ball_shadow").zIndex = -1
 
     console.log("Spawned Objects", flagPos, ballLoc.loc)
@@ -120,10 +89,10 @@ function maxHeightInSurroundings(point, radius) {
 function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
     let x, y;
     do {
-      x = Math.floor(Math.random() * (heightMap.length - 2 * minDistanceFromBorder) + minDistanceFromBorder);
-      y = Math.floor(Math.random() * (heightMap[0].length - 2 * minDistanceFromBorder) + minDistanceFromBorder);
+      x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
+      y = Math.floor(Math.random() * (heightMap[0].length - (2 * minDistanceFromBorder)) + minDistanceFromBorder);
     } while (
-        heightMap[x][y] !== 0 && maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) !== 0
+        !(maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) <= 0)
     ); // Keep searching until a grass location is found
 
     return { x: x, y: y };
@@ -171,7 +140,7 @@ function genHeightMaps() {
 }
 
 
-function borderName(x, y, imgScale, lim) {
+function borderName(x, y, imgScale, posSystem) {
     
     let b = true
     let t = true
@@ -183,17 +152,15 @@ function borderName(x, y, imgScale, lim) {
     let tl = false
     let tr = false
 
-    try { b = biome[x][y + imgScale] > lim } catch (err) {}
-    try { t = biome[x][y - imgScale] > lim } catch (err) {} 
-    try { l = biome[x - imgScale][y] > lim } catch (err) {}
-    try { r = biome[x + imgScale][y] > lim } catch (err) {}
+    b = posSystem.hasPoint(x, y + imgScale)
+    t = posSystem.hasPoint(x, y - imgScale)
+    l = posSystem.hasPoint(x - imgScale, y)
+    r = posSystem.hasPoint(x + imgScale, y)
 
-    try { bl = biome[x - imgScale][y + imgScale] > lim } catch (err) {}
-    try { br = biome[x + imgScale][y + imgScale] > lim } catch (err) {} 
-    try { tl = biome[x - imgScale][y - imgScale] > lim } catch (err) {}
-    try { tr = biome[x + imgScale][y - imgScale] > lim } catch (err) {}
-
-
+    bl = posSystem.hasPoint(x - imgScale, y + imgScale)
+    br = posSystem.hasPoint(x + imgScale, y + imgScale)
+    tl = posSystem.hasPoint(x - imgScale, y - imgScale)
+    tr = posSystem.hasPoint(x + imgScale, y - imgScale)
 
     if (!bl && br && tl && tr && t && b && l && r) { return "MBL" }
     if (bl && !br && tl && tr && t && b && l && r) { return "MBR" }

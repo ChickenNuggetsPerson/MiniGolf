@@ -121,11 +121,11 @@ function render() {
 
             // Check for the object out of screen
             if (!object.alwaysRender) {
-                if (object.xPos < window.screenLeft - renderOverlap) { return; }
-                if (object.xPos > window.screenLeft + window.innerWidth + renderOverlap) { return; }
+                if (object.xPos < xOff - renderOverlap) { return; }
+                if (object.xPos > xOff + window.innerWidth + renderOverlap) { return; }
     
-                if (object.yPos < window.screenTop - renderOverlap) { return; }
-                if (object.yPos > window.screenTop + window.innerHeight + renderOverlap) { return; }
+                if (object.yPos < yOff - renderOverlap) { return; }
+                if (object.yPos > yOff + window.innerHeight + renderOverlap) { return; }
             }
             
             let width = images[object.spriteStr].naturalWidth * object.scale
@@ -224,7 +224,7 @@ function render() {
 
             if (alpha > fadeIn) { alpha = fadeIn }
             if (alpha < 0) { alpha = 0 }
-            console.log(alpha)
+            // console.log(alpha)
 
             ctx.globalAlpha = alpha
 
