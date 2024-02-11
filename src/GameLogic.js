@@ -166,6 +166,8 @@ function mouseDown(x, y) {
         )
         ballHitCount++;
         lastHitTime = new Date()
+
+        playSwing(arrowScale / 6.25, ball.xPos, ball.yPos)
     } else { 
 
         if (dist > 40) { return; } // Clicked on ball

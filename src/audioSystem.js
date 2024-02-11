@@ -1,5 +1,4 @@
 
-
 let soundMult = 2
 
 function playAudioSpatial(name, soundLevel, x, y, z) {
@@ -42,10 +41,18 @@ function playAudioStream(name, soundLevel) {
 }
 
 function playHardHit(level, x, y) {
-    playAudioSpatial(`HardHit${randomIntInRange(1, 3)}.wav`, Math.abs(level), x, y + 100, 10)
+    playAudioSpatial(`BallSounds/HardHit${randomIntInRange(1, 3)}.wav`, Math.abs(level), x, y + 100, 10)
 }
 function playGrassHit(level, x, y) {
-    playAudioSpatial(`GrassHit${randomIntInRange(1, 2)}.mp3`, Math.abs(level), x, y + 100, 10)
+    playAudioSpatial(`BallSounds/GrassHit${randomIntInRange(1, 2)}.mp3`, Math.abs(level), x, y + 100, 10)
+}
+function playSwing(level, x, y) {
+    console.log(level)
+    if (level < 0.4) {
+        playAudioSpatial("Swings/SoftHit.wav", 0.3, x, y)
+    } else {
+        playAudioSpatial("Swings/HardHit.wav", 0.3, x, y)
+    }
 }
 
 
