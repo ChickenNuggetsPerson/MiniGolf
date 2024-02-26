@@ -23,6 +23,9 @@ let wobbleGoal = false;
 let wobbleGoalStart = new Date()
 let wobbleGoalScaleDown = 1
 
+let ballWindowPID = new Pid(0.1, 0, 0)
+let ballWindowSize = 0
+
 function updateWorld() {
     // console.log("update")
 
@@ -120,6 +123,31 @@ function updateWorld() {
     }
 
 
+    // Move Ball Window
+    try {
+        let desiredWindowSize = 200
+
+        if (ballClicked) {
+            desiredWindowSize += arrowScale * 40
+        }
+        
+        desiredWindowSize += (Math.abs(ball.xVel) + Math.abs(ball.yVel)) * 20
+        if (desiredWindowSize > 400) { desiredWindowSize = 400}
+
+        ballWindowSize -= ballWindowPID.iterate(ballWindowSize, desiredWindowSize)
+
+        windowStorage[0].resizeTo(ballWindowSize, ballWindowSize)
+        windowMoveCenter(0, ball.xPos, ball.yPos - ball.height)
+    } catch(err) { console.log(err) }
+
+
+    // Move Goal Window
+    try {
+        let goal = getObjByID("hole")
+        let goalSize = 200
+        windowStorage[1].resizeTo(goalSize, goalSize);
+        windowMoveCenter(1, goal.xPos, goal.yPos)
+    } catch(err) {}
 
 
 }

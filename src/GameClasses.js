@@ -106,7 +106,7 @@ class GameObject {
 
 
 class Bounds {
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, value = 0) {
         this.x1 = x
         this.y1 = y
         this.x2 = x + width
@@ -114,7 +114,11 @@ class Bounds {
 
         this.width = width
         this.height = height
+        
+        this.value = value
     }    
+    value = 0;
+
     inBounds(xPos, yPos) {
         return xPos >= this.x1 && xPos <= this.x2 && yPos >= this.y1 && yPos <= this.y2;
     }
@@ -166,5 +170,15 @@ class PositionStorage {
         })
 
         return contains;
+    }
+};
+
+
+class Vector {
+    x = 0;
+    y = 0;
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
     }
 };

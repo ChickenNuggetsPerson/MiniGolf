@@ -5,26 +5,52 @@ let holePar = 0;
 /** @type {Bounds[]} */
 let heightBounds = []
 
+let containsWater = false;
 function setUpWorld() {
     heightBounds = []
+    containsWater = false;
 
     // Add Borders
     let borderLimt = 0.5
+    // let waterLimit = 0.2
+    let waterLimit = -1
 
     // Add wall points to posSystem
-    let posSystem = new PositionStorage(worldBounds)
+    let wallSystem = new PositionStorage(worldBounds)
+    let waterSystem = new PositionStorage(worldBounds)
     worldBounds.loopThroughScale((x, y) => {
         if (biome[x][y] > borderLimt) { // Large Grass Patches
-            posSystem.addPoint(x, y)
+            wallSystem.addPoint(x, y)
         }
+        if (biome[x][y] < waterLimit) {
+            waterSystem.addPoint(x, y)
+            containsWater = true;
+        }
+
     }, 32)
     // Loop through system and assign wall types
-    posSystem.positions.forEach((pos) => {
-        let name = borderName(pos.x, pos.y, 32, posSystem)
+    wallSystem.positions.forEach((pos) => {
+        let name = borderName(pos.x, pos.y, 32, wallSystem)
         setBoundsHeight(name, 8, pos.x, pos.y, 2)
 
         scene.push(
             new GameObject("Borders/LongGrass/" + name + ".png",
+                pos.x,
+                pos.y,
+                0,
+                2.05, 
+                false,
+                "", 
+                1
+            )
+        )
+    })
+
+    waterSystem.positions.forEach((pos) => {
+        let name = borderName(pos.x, pos.y, 32, waterSystem)
+        setBoundsHeight(name, -8, pos.x, pos.y, 2)
+        scene.push(
+            new GameObject("Nature/Water/" + name + ".png",
                 pos.x,
                 pos.y,
                 0,
@@ -85,15 +111,37 @@ function maxHeightInSurroundings(point, radius) {
     }
     return maxVal
 }
+function minHeightInSurroundings(point, radius) {
+    let minVal = Infinity;
+    for (let x = point.x - radius; x < point.x + radius; x++) {
+        for (let y = point.y - radius; y < point.y + radius; y++) {
+            if (heightMap[x][y] < minVal) {
+                minVal = heightMap[x][y]
+            }
+        }
+    }
+    return minVal
+}
 // Function to find a random location on grass with a minimum distance from the world borders
 function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
     let x, y;
-    do {
-      x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
-      y = Math.floor(Math.random() * (heightMap[0].length - (2 * minDistanceFromBorder)) + minDistanceFromBorder);
-    } while (
-        !(maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) <= 0)
-    ); // Keep searching until a grass location is found
+
+    if (containsWater) {
+        do {
+            x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
+            y = Math.floor(Math.random() * (heightMap[0].length - (2 * minDistanceFromBorder)) + minDistanceFromBorder);
+        } while (
+            !(maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0 && minHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0)
+        ); // Keep searching until a grass location is found
+    } else {
+        do {
+            x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
+            y = Math.floor(Math.random() * (heightMap[0].length - (2 * minDistanceFromBorder)) + minDistanceFromBorder);
+        } while (
+            !(maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0)
+        ); // Keep searching until a grass location is found
+    }
+    
 
     return { x: x, y: y };
 }
@@ -109,7 +157,7 @@ function findFarthestGrassLocation(startPoint, minDistanceFromBorder, minDistFro
 
             const distance = dstBetweenPoints({ x: x, y: y }, startPoint)
             
-            if (distance > maxDistance && maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0) {
+            if (distance > maxDistance && maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0 && minHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0) {
                 maxDistance = distance;
                 farthestLocation = { x: x, y: y };
             }
@@ -130,7 +178,7 @@ function genHeightMaps() {
         bound.loopThrough((x, y) => {
             if (bound.inBounds(x, y)) {
                 try {
-                    heightMap[x][y] = 8 // Height of the platforms
+                    heightMap[x][y] = bound.value // Height of the platforms
                 } catch (err) {}
             }
         })
@@ -167,7 +215,20 @@ function borderName(x, y, imgScale, posSystem) {
     if (bl && br && !tl && tr && t && b && l && r) { return "MTL" }
     if (bl && br && tl && !tr && t && b && l && r) { return "MTR" }
 
-    // return "MBL"
+
+    // if (!bl && br && !tl && tr && t && b && l && r) { return "TL" }
+    // if (bl && br && tl && tr && t && b && l && r) { return "TM" }
+    // if (bl && br && tl && tr && t && b && l && r) { return "TR" }
+
+    // if (bl && br && tl && tr && t && b && l && r) { return "ML" }
+    // if (bl && br && tl && tr && t && b && l && r) { return "MM" }
+    // if (bl && br && tl && tr && t && b && l && r) { return "MR" }
+
+    // if (bl && br && tl && tr && t && b && l && r) { return "BL" }
+    // if (bl && br && tl && tr && t && b && l && r) { return "BM" }
+    // if (bl && br && tl && tr && t && b && l && r) { return "BR" }
+
+
 
     let firstLetter = "M";
     let secondLetter = "M";
@@ -186,62 +247,62 @@ function borderName(x, y, imgScale, posSystem) {
 function setBoundsHeight(name, height, xPos, yPos, renderScale) {
 
     /** @type {Bounds} */
-    let bounds = new Bounds(0, 0, 0, 0);
-    let secondBounds = new Bounds(0, 0, 0, 0)
+    let bounds = new Bounds(0, 0, 0, 0, 0);
+    let secondBounds = new Bounds(0, 0, 0, 0, 0)
 
     switch (name) {
 
         case "BL":
-            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 8 * renderScale, 11 * renderScale)
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 8 * renderScale, 11 * renderScale, height)
             break;
         case "BM":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale, height)
             break;
         case "BR":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 11 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 11 * renderScale, height)
             break;
 
 
 
         case "ML":
-            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale)
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale, height)
             break;
         case "MM":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 16 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 16 * renderScale, height)
             break;
         case "MR":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16  * renderScale, 7 * renderScale, 16 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16  * renderScale, 7 * renderScale, 16 * renderScale, height)
             break;
 
 
 
         case "TL":
-            bounds = new Bounds(xPos + 1 * renderScale, yPos - 7 * renderScale, 7 * renderScale, 7 * renderScale)
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 7 * renderScale, 7 * renderScale, 7 * renderScale, height)
             break;
         case "TM":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale, height)
             break;
         case "TR":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 7 * renderScale, 8 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 7 * renderScale, 8 * renderScale, height)
             break;
 
 
 
         case "MBR":
-            bounds = new       Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale)
-            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale)
+            bounds = new       Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale, height)
+            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale, height)
             break;
         case "MBL":
-            bounds = new       Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale)
-            secondBounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale)
+            bounds = new       Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 16 * renderScale, 11 * renderScale, height)
+            secondBounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale, height)
             break;
         case "MTR":
-            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale)
-            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale)
+            bounds = new Bounds(xPos - 8 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale, height)
+            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale, height)
             break;
         case "MTL":
-            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale)
-            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale)
+            bounds = new Bounds(xPos + 1 * renderScale, yPos - 16 * renderScale, 7 * renderScale, 16 * renderScale, height)
+            secondBounds = new Bounds(xPos - 8 * renderScale, yPos - 7 * renderScale, 16 * renderScale, 7 * renderScale, height)
             break;
     }
 

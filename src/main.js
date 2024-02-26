@@ -8,6 +8,39 @@ let scene = [];
 let biome = [];
 let seed = Math.random() * 100;
 
+
+// Setup popup windows
+/** @type {Window[]} */
+let windowStorage = []
+let windowNames = [
+    "BallWindow",
+    "GoalWindow"
+]
+
+if (isMaster) {
+    for (let i = 0; i < windowNames.length; i++) {
+        let ballWindow = window.open(window.location.href, windowNames[i], "resizable");
+        ballWindow.resizeTo(10, 10);
+        ballWindow.moveTo(0, 0)
+        windowStorage.push(ballWindow)
+    }
+}
+
+function windowMoveCenter(index, x, y) {
+
+    // if (distBetweenObjs({xPos: x, yPos: y}, {
+    //     xPos: windowStorage[index].screenLeft,
+    //     yPos: windowStorage[index].screenTop
+    // }) < 30) { return; }
+
+    windowStorage[index].moveTo(
+        x - (windowStorage[index].innerWidth / 2),
+        y - (windowStorage[index].innerHeight / 2)
+    )
+}
+
+
+
 // Scene update code
 setInterval(() => {
     try {
@@ -18,14 +51,14 @@ setInterval(() => {
                     scene: [],
                     bounds: worldBounds,
                     par: 0,
-                    hits: 0
+                    hits: 0,
                 }))
             } else {
                 windowManager.setSendData(JSON.stringify({
                     scene: scene,
                     bounds: worldBounds,
                     par: holePar,
-                    hits: ballHitCount
+                    hits: ballHitCount,
                 }))
             }
             
@@ -44,9 +77,7 @@ setInterval(() => {
 
 
 // Render code
-setInterval(() => {
-    render();
-}, 20);
+window.requestAnimationFrame(render)
 
 
 if (isMaster) {
@@ -73,23 +104,21 @@ function start() {
     loading = true;
     wobbleGoal = false;
 
-    setTimeout(() => {
+    genBiome()
+    fillHeightMap();
+    setUpWorld()
 
-        genBiome()
-        fillHeightMap();
-        setUpWorld()
+    // Generate Height maps and then choose ball and goal locations
+    genHeightMaps();
+    spawnBallAndGoal();
 
-        // Generate Height maps and then choose ball and goal locations
-        setTimeout(() => {
-            genHeightMaps();
-            spawnBallAndGoal();
-            lastHitTime = new Date()
+    lastHitTime = new Date()
+    loading = false;
 
-            loading = false;
-        }, 20);
 
-    }, 500);
 }
+
+
 
 async function titleMenu() {
     return new Promise((resolve) => {
@@ -120,7 +149,18 @@ async function titleMenu() {
 
             clickToPlay.xPos = centerX
             clickToPlay.yPos = centerY + 150
-            clickToPlay.scale = (Math.cos(new Date().getTime() / 1000) + 3) * 0.08
+            clickToPlay.scale = 0.3 + (Math.cos(new Date().getTime() / 1000) * 0.05)
+
+            windowMoveCenter(0,
+                window.screenLeft - 70 + Math.cos(new Date().getTime()/1000) * 100, 
+                window.screenTop - 70 + Math.sin(new Date().getTime()/1000) * 100
+            )
+
+            windowMoveCenter(1, 
+                window.screenLeft + window.innerWidth + 70 + Math.sin(new Date().getTime()/1000) * 100, 
+                window.screenTop + window.innerHeight + 70 + Math.cos(new Date().getTime()/1000) * 100
+            )
+
         }, 20);
 
         addEventListener("click", (event) => {

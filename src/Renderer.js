@@ -6,6 +6,9 @@ let titleScreen = false;
 let screenMaxX = 590
 let screenMaxY = 400
 
+// let screenMaxX = 2000
+// let screenMaxY = 2000
+
 // Load the sprites
 let spriteNames = [
     "test.gif",
@@ -39,6 +42,25 @@ let spriteNames = [
     "Borders/LongGrass/MTR.png",
     "Borders/LongGrass/MTL.png",
 
+
+
+    "Nature/Water/BL.png",
+    "Nature/Water/BM.png",
+    "Nature/Water/BR.png",
+
+    "Nature/Water/ML.png",
+    "Nature/Water/MM.png",
+    "Nature/Water/MR.png",
+
+    "Nature/Water/TL.png",
+    "Nature/Water/TM.png",
+    "Nature/Water/TR.png",
+
+    "Nature/Water/MBR.png",
+    "Nature/Water/MBL.png",
+    "Nature/Water/MTR.png",
+    "Nature/Water/MTL.png",
+
 ] // Todo: make a system for auto detecting sprites and getting them
 let images = {}
 spriteNames.forEach((name) => {
@@ -55,8 +77,8 @@ var ctx = c.getContext("2d");
 let xOff = 0
 let yOff = 0
 
-let xPID = new Pid(0.3, 0, 0)
-let yPID = new Pid(0.3, 0, 0)
+let xPID = new Pid(0.1, 0, 0)
+let yPID = new Pid(0.1, 0, 0)
 
 function render() {
 
@@ -65,11 +87,9 @@ function render() {
 
     ctx.fillStyle = "#529c3b";
     ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-    
 
     xOff -= xPID.iterate(xOff, window.screenLeft)
     yOff -= yPID.iterate(yOff, window.screenTop)
-
 
     // If the master screen is not alive
     // blank the screen
@@ -89,6 +109,45 @@ function render() {
         ctx.font = "20px Pixelify Sans"
         ctx.fillText("No Master Screen", centerX - 88, centerY + 7)
 
+        window.requestAnimationFrame(render)
+        return
+    }
+
+    // Render master screen text
+    if (isMaster) {
+        ctx.fillStyle = "#d9473d"
+        ctx.fillRect(0, 0, 170, 20)
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Master Screen", 10, 15)
+    }
+
+    // Render loading text
+    if (isMaster && loading) {
+        ctx.fillStyle = "#d9a53d"
+        ctx.fillRect(0, 20, 170, 20)
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Building World", 15, 35)
+    }
+
+    if (isMaster && !titleScreen) {
+
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "black"
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+
+        let centerX = window.innerWidth / 2
+        let centerY = window.innerHeight / 2
+
+        ctx.fillStyle = "white"
+        ctx.fillRect(centerX - 120, centerY - 20, 240, 40)    
+        
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Minimize This Screen", centerX - 95, centerY + 7)
+
+        window.requestAnimationFrame(render)
         return
     }
 
@@ -193,52 +252,6 @@ function render() {
 
 
     // Render Ball Arrow
-    try {
-        if (isMaster) {
-            let ball = getObjByID("ball")
-            let inScreen = 0;
-
-            if (ball.xPos < window.screenLeft) { inScreen += window.screenLeft - ball.xPos; }
-            if (ball.xPos > window.screenLeft + window.innerWidth) { inScreen += ball.xPos - (window.screenLeft + window.innerWidth); }
-
-            if (ball.yPos < window.screenTop) { inScreen += window.screenTop - ball.yPos; }
-            if (ball.yPos > window.screenTop + window.innerHeight) { inScreen += ball.yPos - (window.screenTop + window.innerHeight); }
-            if (inScreen > 100) { inScreen = 100 }
-        
-            let screenMiddle = {
-                x: (window.innerWidth / 2) + xOff,
-                y: (window.innerHeight / 2) + yOff,
-            }
-
-            const angleInRadians = Math.atan2(ball.xPos - screenMiddle.x, ball.yPos - screenMiddle.y);
-
-            ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
-            let width = images["Objects/Arrow.png"].naturalWidth * 5
-            let height = images["Objects/Arrow.png"].naturalHeight * 5
-
-            // Rotate the canvas
-            ctx.rotate(-angleInRadians + Math.PI);
-
-            let alpha = inScreen / 100
-            let fadeIn = ( new Date().getTime() - lastHitTime.getTime() - 10000 ) / 10000 
-
-            if (alpha > fadeIn) { alpha = fadeIn }
-            if (alpha < 0) { alpha = 0 }
-            // console.log(alpha)
-
-            ctx.globalAlpha = alpha
-
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(
-                images["Objects/Arrow.png"], 
-                -width / 2, 
-                -height, 
-                width, 
-                height
-            )
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Canvas 
-        }
-    } catch (err) {}
 
     ctx.globalAlpha = 1
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -269,23 +282,8 @@ function render() {
 
     ctx.globalAlpha = 1
 
-    // Render master screen text
-    if (isMaster) {
-        ctx.fillStyle = "#d9473d"
-        ctx.fillRect(0, 0, 170, 20)
-        ctx.fillStyle = "black"
-        ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Master Screen", 10, 15)
-    }
 
-    // Render loading text
-    if (isMaster && loading) {
-        ctx.fillStyle = "#d9a53d"
-        ctx.fillRect(0, 20, 170, 20)
-        ctx.fillStyle = "black"
-        ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Building World", 15, 35)
-    }
+    window.requestAnimationFrame(render)
 }
 
 
