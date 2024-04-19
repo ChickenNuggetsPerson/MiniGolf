@@ -8,35 +8,60 @@ let scene = [];
 let biome = [];
 let seed = Math.random() * 100;
 
+let holeCount = 0;
+let totalHitsCount = 0;
+let wasReset = false;
 
 // Setup popup windows
 /** @type {Window[]} */
 let windowStorage = []
 let windowNames = [
-    "BallWindow",
-    "GoalWindow"
+    "BallWindow", // 0
+    "GoalWindow", // 1
+    // "Float1",     // 2
+    // "Float2",     // 3
+    // "Float3"      // 4
 ]
+function spawnWindows() {
+    for (let i = 0; i < windowNames.length; i++) {
+        try {
+            let spawnedWindow = window.open(window.location.href, windowNames[i], "resizable");
+            spawnedWindow.resizeTo(10, 10);
+            spawnedWindow.moveTo(0, 0)
+            windowStorage.push(spawnedWindow)
+        } catch(err) {
+            console.log(err)
+        }
+    }
+}
 
 if (isMaster) {
-    for (let i = 0; i < windowNames.length; i++) {
-        let ballWindow = window.open(window.location.href, windowNames[i], "resizable");
-        ballWindow.resizeTo(10, 10);
-        ballWindow.moveTo(0, 0)
-        windowStorage.push(ballWindow)
-    }
+    spawnWindows();
+}
+
+if (window.opener) {
+    windowManager.yShift = yShift
 }
 
 function windowMoveCenter(index, x, y) {
 
-    // if (distBetweenObjs({xPos: x, yPos: y}, {
-    //     xPos: windowStorage[index].screenLeft,
-    //     yPos: windowStorage[index].screenTop
-    // }) < 30) { return; }
+    // let dist = distBetweenObjs({
+    //     xPos: windowStorage[index].screenX,
+    //     yPos: windowStorage[index].screenY
+    // }, {
+    //     xPos: x,
+    //     yPos: y
+    // })
+    // if (dist < 30) { return}
+
 
     windowStorage[index].moveTo(
         x - (windowStorage[index].innerWidth / 2),
-        y - (windowStorage[index].innerHeight / 2)
+        y - (windowStorage[index].innerHeight / 2) - yShift
     )
+}
+function windowMoveCorner(index, x, y) {
+    windowStorage[index].moveTo(x, y)
 }
 
 
@@ -97,6 +122,9 @@ async function masterLogic() {
 
 // Starts the scene
 function start() {
+    holeCount++
+    totalHitsCount += ballHitCount
+
     scene = []
     seed = Math.random() * 10;
     ballHitCount = 0;
@@ -114,7 +142,7 @@ function start() {
 
     lastHitTime = new Date()
     loading = false;
-
+    wasReset = true;
 
 }
 
@@ -151,15 +179,21 @@ async function titleMenu() {
             clickToPlay.yPos = centerY + 150
             clickToPlay.scale = 0.3 + (Math.cos(new Date().getTime() / 1000) * 0.05)
 
+            if (windowStorage.length == 0) {
+                spawnWindows();
+            }
+
             windowMoveCenter(0,
-                window.screenLeft - 70 + Math.cos(new Date().getTime()/1000) * 100, 
-                window.screenTop - 70 + Math.sin(new Date().getTime()/1000) * 100
+                xOff - 70 + Math.cos(new Date().getTime()/1000) * 100, 
+                yOff - 70 + Math.sin(new Date().getTime()/1000) * 100
             )
+            windowStorage[0].resizeTo(10, 10);
 
             windowMoveCenter(1, 
-                window.screenLeft + window.innerWidth + 70 + Math.sin(new Date().getTime()/1000) * 100, 
-                window.screenTop + window.innerHeight + 70 + Math.cos(new Date().getTime()/1000) * 100
+                xOff + window.innerWidth + 70 + Math.sin(new Date().getTime()/1000) * 100, 
+                yOff + window.innerHeight + 70 + Math.cos(new Date().getTime()/1000) * 100
             )
+            windowStorage[1].resizeTo(10, 10);
 
         }, 20);
 
@@ -201,6 +235,9 @@ if (false) {
 }
 
 
+function noiseFunction(x, y, z) {
+    return PerlinNoise.noise(x, y, z)
+}
 
 function genBiome() {
     biome = []

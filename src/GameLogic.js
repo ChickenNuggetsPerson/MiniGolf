@@ -23,12 +23,18 @@ let wobbleGoal = false;
 let wobbleGoalStart = new Date()
 let wobbleGoalScaleDown = 1
 
-let ballWindowPID = new Pid(0.1, 0, 0)
-let ballWindowSize = 0
+let ballWindowPID_X = new Pid(0.1, 0.0005, 0)
+let ballWindowPID_Y = new Pid(0.1, 0.0005, 0)
+let ballWindowSize_X = 200
+let ballWindowSize_Y = 200
+
+let ballWindowPID_Pos_X = new Pid(0.15, 0.0003, 0)
+let ballWindowPID_Pos_Y = new Pid(0.15, 0.0003, 0)
+let ballWindowPos_X = 0
+let ballWindowPos_Y = 0
 
 function updateWorld() {
     // console.log("update")
-
     scene = scene.filter(obj => obj.id !== "--DeleteMe--"); // Delete objects that need deleting 
 
     scene.forEach((object) => { 
@@ -127,28 +133,56 @@ function updateWorld() {
     try {
         let desiredWindowSize = 200
 
+        let xSize = desiredWindowSize
+        let ySize = desiredWindowSize
+        let rot = ((((arrowRot * -1) + 360 - 270) % 360) / 180) * Math.PI // Rotate the rotation and convert to radians
+
+        // console.log(rot)
+
         if (ballClicked) {
-            desiredWindowSize += arrowScale * 40
+            xSize += Math.abs((arrowScale * Math.cos(rot)) * 50)
+            ySize += Math.abs((arrowScale * Math.sin(rot)) * 50)
+
         }
-        
-        desiredWindowSize += (Math.abs(ball.xVel) + Math.abs(ball.yVel)) * 20
-        if (desiredWindowSize > 400) { desiredWindowSize = 400}
 
-        ballWindowSize -= ballWindowPID.iterate(ballWindowSize, desiredWindowSize)
+        xSize += Math.abs(ball.xVel) * 10
+        ySize += Math.abs(ball.yVel) * 10
 
-        windowStorage[0].resizeTo(ballWindowSize, ballWindowSize)
-        windowMoveCenter(0, ball.xPos, ball.yPos - ball.height)
+        if (wasReset) {
+            ballWindowPID_X.reset()
+            ballWindowPID_Y.reset()
+        }
+
+        ballWindowSize_X -= ballWindowPID_X.iterate(ballWindowSize_X, xSize)
+        ballWindowSize_Y -= ballWindowPID_Y.iterate(ballWindowSize_Y, ySize)
+
+        windowStorage[0].resizeTo(ballWindowSize_X, ballWindowSize_Y)
+
+        if (wasReset) {
+            ballWindowPID_Pos_X.reset()
+            ballWindowPID_Pos_Y.reset()
+        }
+
+        ballWindowPos_X -= ballWindowPID_Pos_X.iterate(ballWindowPos_X, ball.xPos)
+        ballWindowPos_Y -= ballWindowPID_Pos_Y.iterate(ballWindowPos_Y, ball.yPos)
+
+        windowMoveCenter(0, ballWindowPos_X, ballWindowPos_Y)
+
+
     } catch(err) { console.log(err) }
 
 
     // Move Goal Window
     try {
         let goal = getObjByID("hole")
-        let goalSize = 200
-        windowStorage[1].resizeTo(goalSize, goalSize);
+        windowStorage[1].resizeTo(200, 250);
+        // let shiftX = (Math.cos(new Date().getTime()/1000) - 0.5) * 20
+        // let shiftY = (Math.sin(new Date().getTime()/1000) - 0.5) * 20
+
         windowMoveCenter(1, goal.xPos, goal.yPos)
     } catch(err) {}
 
+    if (wasReset) { wasReset = false; }
 
 }
 
@@ -185,7 +219,7 @@ function mouseDown(x, y) {
     if (ballClicked) {
         ballClicked = false;
 
-        let launchScale = 5;
+        let launchScale = 6;
 
         arrowRot = arrowRot + wobbleRot
         hitBall(

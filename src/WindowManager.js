@@ -19,6 +19,8 @@ class WindowManager {
     masterSendData = ""
     masterRecieveData = ""
 
+    yShift = 0
+
     constructor() {}
 
     init() {
@@ -48,7 +50,7 @@ class WindowManager {
             localStorage.setItem(this.mouseCBPrefix + this.mouseMoveType, JSON.stringify(
                 {
                     x: event.x + window.screenLeft,
-                    y: event.y + window.screenTop
+                    y: event.y + window.screenTop + this.yShift
                 }
             ))
         });
@@ -61,7 +63,7 @@ class WindowManager {
             localStorage.setItem(this.mouseCBPrefix + this.mouseDownType, JSON.stringify(
                 {
                     x: event.x + window.screenLeft,
-                    y: event.y + window.screenTop
+                    y: event.y + window.screenTop + this.yShift
                 }
             ))
         });

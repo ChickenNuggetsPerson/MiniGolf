@@ -3,8 +3,11 @@ let renderBiomeScale = 15
 let loading = true;
 let titleScreen = false;
 
-let screenMaxX = 590
-let screenMaxY = 400
+// let screenMaxX = 590
+// let screenMaxY = 400
+
+let screenMaxX = 800
+let screenMaxY = 800
 
 // let screenMaxX = 2000
 // let screenMaxY = 2000
@@ -76,20 +79,29 @@ var ctx = c.getContext("2d");
 
 let xOff = 0
 let yOff = 0
+let yActual = 0;
+let yShift = -24
 
-let xPID = new Pid(0.1, 0, 0)
-let yPID = new Pid(0.1, 0, 0)
+let xPID = new Pid(0.15, 0, 0)
+let yPID = new Pid(0.15, 0, 0)
 
 function render() {
 
     c.width = window.innerWidth
     c.height = window.innerHeight
 
-    ctx.fillStyle = "#529c3b";
+    ctx.fillStyle = "#3f3e3d";
     ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
     xOff -= xPID.iterate(xOff, window.screenLeft)
-    yOff -= yPID.iterate(yOff, window.screenTop)
+    yActual -= yPID.iterate(yActual, window.screenTop)
+    
+    if (window.opener) {
+        yOff = yActual + yShift
+    } else {
+        yOff = yActual
+    }
+    
 
     // If the master screen is not alive
     // blank the screen
@@ -113,25 +125,9 @@ function render() {
         return
     }
 
-    // Render master screen text
-    if (isMaster) {
-        ctx.fillStyle = "#d9473d"
-        ctx.fillRect(0, 0, 170, 20)
-        ctx.fillStyle = "black"
-        ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Master Screen", 10, 15)
-    }
-
-    // Render loading text
-    if (isMaster && loading) {
-        ctx.fillStyle = "#d9a53d"
-        ctx.fillRect(0, 20, 170, 20)
-        ctx.fillStyle = "black"
-        ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Building World", 15, 35)
-    }
-
     if (isMaster && !titleScreen) {
+
+        // Master window during gameplay
 
         ctx.globalAlpha = 1
         ctx.fillStyle = "black"
@@ -139,13 +135,20 @@ function render() {
 
         let centerX = window.innerWidth / 2
         let centerY = window.innerHeight / 2
-
-        ctx.fillStyle = "white"
-        ctx.fillRect(centerX - 120, centerY - 20, 240, 40)    
         
-        ctx.fillStyle = "black"
+        ctx.fillStyle = "white"
         ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Minimize This Screen", centerX - 95, centerY + 7)
+        ctx.fillText("Game Stats:", 12, 20)
+
+        ctx.font = "35px Pixelify Sans"
+        ctx.fillText("Hole #" + holeCount, 12, 100)
+
+        ctx.font = "30px Pixelify Sans"
+        ctx.fillText("Par: " + holePar, 12, 150)
+        ctx.fillText("Hit: " + ballHitCount, 12, 180)
+
+        ctx.font = "25px Pixelify Sans"
+        ctx.fillText("Avg Hits Per Goal: " + Math.floor((totalHitsCount / (holeCount-1))), 12, 230)
 
         window.requestAnimationFrame(render)
         return
@@ -158,10 +161,13 @@ function render() {
         for (let y = 0; y < worldBounds.height; y += renderBiomeScale) {
             if ( yCounter % 2 == 0 ) {
                 ctx.fillStyle = "#55bd39"
+                ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
             } else {
                 ctx.fillStyle = "#4fad34"
+                
             }
-            ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale, renderBiomeScale)
+
+            ctx.fillRect(x - xOff - renderBiomeScale/2, y - yOff - renderBiomeScale/2, renderBiomeScale + 1, renderBiomeScale + 1)
 
             yCounter++;
         }
@@ -281,6 +287,24 @@ function render() {
     }
 
     ctx.globalAlpha = 1
+
+    // Render master screen text
+    if (isMaster) {
+        ctx.fillStyle = "#d9473d"
+        ctx.fillRect(0, 0, 170, 20)
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Master Screen", 10, 15)
+    }
+
+    // Render loading text
+    if (isMaster && loading) {
+        ctx.fillStyle = "#d9a53d"
+        ctx.fillRect(0, 20, 170, 20)
+        ctx.fillStyle = "black"
+        ctx.font = "20px Pixelify Sans"
+        ctx.fillText("Building World", 15, 35)
+    }
 
 
     window.requestAnimationFrame(render)

@@ -11,6 +11,8 @@ class Pid {
     derivative = 0;
     totalError = 0;
 
+    resetTimer = 0
+
     lastTime = 0;
 
     constructor(p, i, d) {
@@ -32,6 +34,11 @@ class Pid {
     */
 
     iterate(newVal, desiredVal) {
+        if (this.resetTimer > 0) {
+            this.resetTimer--;
+            return 0;
+        }
+
         let now = new Date().getTime()
         let dt = now - this.lastTime
 
@@ -46,5 +53,16 @@ class Pid {
         this.lastTime = now
 
         return result
+    }
+    reset() {
+
+        this.error = 0;
+        this.prevError = 0;
+
+        this.derivative = 0;
+        this.totalError = 0;
+
+        this.lastTime =  new Date().getTime() + 500
+        this.resetTimer = 10
     }
 };
