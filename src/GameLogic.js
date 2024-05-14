@@ -133,20 +133,19 @@ function updateWorld() {
     try {
         let desiredWindowSize = 200
 
-        let xSize = desiredWindowSize
-        let ySize = desiredWindowSize
+        let xSize = 0
+        let ySize = 0
         let rot = ((((arrowRot * -1) + 360 - 270) % 360) / 180) * Math.PI // Rotate the rotation and convert to radians
 
         // console.log(rot)
 
         if (ballClicked) {
-            xSize += Math.abs((arrowScale * Math.cos(rot)) * 50)
-            ySize += Math.abs((arrowScale * Math.sin(rot)) * 50)
-
+            xSize += (arrowScale * Math.cos(rot)) * 75
+            ySize -= (arrowScale * Math.sin(rot)) * 75
         }
 
-        xSize += Math.abs(ball.xVel) * 10
-        ySize += Math.abs(ball.yVel) * 10
+        // xSize += (ball.xVel) * 15
+        // ySize += (ball.yVel) * 15
 
         if (wasReset) {
             ballWindowPID_X.reset()
@@ -156,7 +155,7 @@ function updateWorld() {
         ballWindowSize_X -= ballWindowPID_X.iterate(ballWindowSize_X, xSize)
         ballWindowSize_Y -= ballWindowPID_Y.iterate(ballWindowSize_Y, ySize)
 
-        windowStorage[0].resizeTo(ballWindowSize_X, ballWindowSize_Y)
+        // windowStorage[0].resizeTo(ballWindowSize_X, ballWindowSize_Y)
 
         if (wasReset) {
             ballWindowPID_Pos_X.reset()
@@ -166,8 +165,32 @@ function updateWorld() {
         ballWindowPos_X -= ballWindowPID_Pos_X.iterate(ballWindowPos_X, ball.xPos)
         ballWindowPos_Y -= ballWindowPID_Pos_Y.iterate(ballWindowPos_Y, ball.yPos)
 
-        windowMoveCenter(0, ballWindowPos_X, ballWindowPos_Y)
+        // windowMoveCenter(0, ballWindowPos_X, ballWindowPos_Y)
 
+        windowMoveSides(0, 
+            ballWindowPos_X, 
+            ballWindowPos_Y, 
+            desiredWindowSize - Math.abs(ballWindowSize_X/1.4), 
+            desiredWindowSize - Math.abs(ballWindowSize_Y/1.4), 
+            ballWindowSize_X, 
+            ballWindowSize_Y
+        )
+
+        windowMoveSides(2, 
+            ballWindowPos_X, 
+            ballWindowPos_Y,
+            100,
+            100,
+            0, 
+            0
+        )
+
+        // windowMoveSides(0, ballWindowPos_X, ballWindowPos_Y, 200, 200, 0, 0)
+
+        // let push = Math.cos(new Date().getTime()/1000) * 200
+        // let push2 = Math.sin(new Date().getTime()/1000) * 200
+        // console.log(push2)
+        // windowMoveSides(0, 500, 500, 300, 300, 0, push2)
 
     } catch(err) { console.log(err) }
 
@@ -180,6 +203,9 @@ function updateWorld() {
         // let shiftY = (Math.sin(new Date().getTime()/1000) - 0.5) * 20
 
         windowMoveCenter(1, goal.xPos, goal.yPos)
+        // let ypush = Math.cos(new Date().getTime()/1000) * 200
+        // console.log(ypush)
+        // windowMoveSides(1, goal.xPos, goal.yPos, 150, 200, 0, 0)
     } catch(err) {}
 
     if (wasReset) { wasReset = false; }

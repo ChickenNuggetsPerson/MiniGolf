@@ -18,7 +18,7 @@ let windowStorage = []
 let windowNames = [
     "BallWindow", // 0
     "GoalWindow", // 1
-    // "Float1",     // 2
+    "Float1",     // 2
     // "Float2",     // 3
     // "Float3"      // 4
 ]
@@ -62,6 +62,40 @@ function windowMoveCenter(index, x, y) {
 }
 function windowMoveCorner(index, x, y) {
     windowStorage[index].moveTo(x, y)
+}
+function windowMoveSides(index, x, y, baseSizeX, baseSizeY, xPush, yPush) {
+
+    let posX = x
+    let posY = y //- (baseSizeY/2)// - (windowStorage[index].innerHeight)
+    
+    let sizeX = baseSizeX
+    let sizeY = baseSizeY
+
+    if (xPush > 0) {
+        sizeX += xPush
+        posX += xPush / 2
+    } else {
+        sizeX -= xPush
+        posX += xPush / 2
+    }
+
+    if (yPush > 0) {
+        sizeY += yPush
+        posY += yPush / 2
+    } else {
+        sizeY -= yPush
+        posY += yPush / 2
+    }
+    
+
+    console.log(posX, sizeX)
+
+    // windowStorage[index].moveTo(
+    //     posX,
+    //     posY
+    // )
+    windowMoveCenter(index, posX, posY)
+    windowStorage[index].resizeTo(sizeX, sizeY)
 }
 
 
