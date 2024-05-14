@@ -125,35 +125,6 @@ function render() {
         return
     }
 
-    if (isMaster && !titleScreen) {
-
-        // Master window during gameplay
-
-        ctx.globalAlpha = 1
-        ctx.fillStyle = "black"
-        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
-
-        let centerX = window.innerWidth / 2
-        let centerY = window.innerHeight / 2
-        
-        ctx.fillStyle = "white"
-        ctx.font = "20px Pixelify Sans"
-        ctx.fillText("Game Stats:", 12, 20)
-
-        ctx.font = "35px Pixelify Sans"
-        ctx.fillText("Hole #" + holeCount, 12, 100)
-
-        ctx.font = "30px Pixelify Sans"
-        ctx.fillText("Par: " + holePar, 12, 150)
-        ctx.fillText("Hit: " + ballHitCount, 12, 180)
-
-        ctx.font = "25px Pixelify Sans"
-        ctx.fillText("Avg Hits Per Goal: " + Math.floor((totalHitsCount / (holeCount-1))), 12, 230)
-
-        window.requestAnimationFrame(render)
-        return
-    }
-
 
     // Create checkerboard pattern
     let yCounter = 0;
@@ -305,7 +276,6 @@ function render() {
         ctx.font = "20px Pixelify Sans"
         ctx.fillText("Building World", 15, 35)
     }
-
 
     window.requestAnimationFrame(render)
 }

@@ -18,7 +18,7 @@ let windowStorage = []
 let windowNames = [
     "BallWindow", // 0
     "GoalWindow", // 1
-    "Float1",     // 2
+    // "Float1",     // 2
     // "Float2",     // 3
     // "Float3"      // 4
 ]
@@ -45,20 +45,12 @@ if (window.opener) {
 
 function windowMoveCenter(index, x, y) {
 
-    // let dist = distBetweenObjs({
-    //     xPos: windowStorage[index].screenX,
-    //     yPos: windowStorage[index].screenY
-    // }, {
-    //     xPos: x,
-    //     yPos: y
-    // })
-    // if (dist < 30) { return}
-
-
-    windowStorage[index].moveTo(
-        x - (windowStorage[index].innerWidth / 2),
-        y - (windowStorage[index].innerHeight / 2) - yShift
-    )
+    try {
+        windowStorage[index].moveTo(
+            x - (windowStorage[index].innerWidth / 2),
+            y - (windowStorage[index].innerHeight / 2) - yShift
+        )
+    } catch(err) {}
 }
 function windowMoveCorner(index, x, y) {
     windowStorage[index].moveTo(x, y)
@@ -86,17 +78,21 @@ function windowMoveSides(index, x, y, baseSizeX, baseSizeY, xPush, yPush) {
         sizeY -= yPush
         posY += yPush / 2
     }
-    
 
-    console.log(posX, sizeX)
-
-    // windowStorage[index].moveTo(
-    //     posX,
-    //     posY
-    // )
-    windowMoveCenter(index, posX, posY)
     windowStorage[index].resizeTo(sizeX, sizeY)
+    windowMoveCenter(index, posX, posY)
 }
+function windowMoveRotate(index, x, y, rot, dist) {
+
+    let xPos = x;
+    let yPos = y;
+
+    xPos += Math.cos(rot) * dist
+    yPos += Math.sin(rot) * dist
+
+    // windowStorage[index].moveTo(xPos, yPos)
+    windowMoveCenter(index, xPos, yPos)
+} 
 
 
 
@@ -156,27 +152,30 @@ async function masterLogic() {
 
 // Starts the scene
 function start() {
-    holeCount++
-    totalHitsCount += ballHitCount
-
-    scene = []
-    seed = Math.random() * 10;
-    ballHitCount = 0;
     
     loading = true;
     wobbleGoal = false;
 
-    genBiome()
-    fillHeightMap();
-    setUpWorld()
+    setTimeout(() => {
+        holeCount++
+        totalHitsCount += ballHitCount
 
-    // Generate Height maps and then choose ball and goal locations
-    genHeightMaps();
-    spawnBallAndGoal();
+        scene = []
+        seed = Math.random() * 10;
+        ballHitCount = 0;
+        
+        genBiome()
+        fillHeightMap();
+        setUpWorld()
 
-    lastHitTime = new Date()
-    loading = false;
-    wasReset = true;
+        // Generate Height maps and then choose ball and goal locations
+        genHeightMaps();
+        spawnBallAndGoal();
+
+        lastHitTime = new Date()
+        loading = false;
+        wasReset = true;
+    }, 100);
 
 }
 

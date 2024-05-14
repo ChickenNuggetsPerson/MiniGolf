@@ -11,7 +11,7 @@ function setUpWorld() {
     containsWater = false;
 
     // Add Borders
-    let borderLimt = 0.5
+    let borderLimt = 0.4
     // let waterLimit = 0.2
     let waterLimit = -1
 
