@@ -73,13 +73,16 @@ function setUpWorld() {
 
 function spawnBallAndGoal() {
 
+    console.log("Generating Flag Pos")
     let flagPos = findRandomGrassLocation(100, 80)
+    console.log("Done Generating Flag Pos")
 
     scene.push(new GameObject("Objects/Flag.png", flagPos.x, flagPos.y + 1, 0, 2, false, "flag"))
     scene.push(new GameObject("Objects/Hole.png", flagPos.x, flagPos.y, 0, 2, false, "hole"))
     getObjByID("hole").zIndex = -100
 
 
+    console.log("Generating Ball Pos")
     let ballLoc = findFarthestGrassLocation(flagPos, 100, 20)
     let ballScale = 1.5
     scene.push(new GameObject("Objects/Ball.png", ballLoc.loc.x, ballLoc.loc.y, 0, ballScale, true, "ball"))
@@ -100,18 +103,36 @@ function dstBetweenPoints(pos1, pos2) {
     let b = pos2.y - pos1.y
     return Math.sqrt(a * a + b * b)
 }
+function returnMax(a, x, y) {
+
+    let b = -Infinity
+
+    try {
+        b = heightMap[x][y]
+    } catch(err) {}
+
+    return a > b ? a : b
+}
 function maxHeightInSurroundings(point, radius) {
-    let maxVal = 0;
-    for (let x = point.x - radius; x < point.x + radius; x++) {
-        for (let y = point.y - radius; y < point.y + radius; y++) {
-            try {
-                if (heightMap[x][y] > maxVal) {
-                    maxVal = heightMap[x][y]
-                }
-            } catch (err) {}
-        }
-    }
+    let maxVal = -Infinity;
+    // for (let x = point.x - radius; x < point.x + radius; x++) {
+    //     for (let y = point.y - radius; y < point.y + radius; y++) {
+    //         try {
+    //             if (heightMap[x][y] > maxVal) {
+    //                 maxVal = heightMap[x][y]
+    //             }
+    //         } catch (err) {}
+    //     }
+    // }
+
+    maxVal = returnMax(maxVal, point.x, point.y)
+    maxVal = returnMax(maxVal, point.x + radius, point.y)
+    maxVal = returnMax(maxVal, point.x - radius, point.y)
+    maxVal = returnMax(maxVal, point.x, point.y + radius)
+    maxVal = returnMax(maxVal, point.x, point.y - radius)
+
     return maxVal
+
 }
 function minHeightInSurroundings(point, radius) {
     let minVal = Infinity;
@@ -128,7 +149,7 @@ function minHeightInSurroundings(point, radius) {
 function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
     let x, y;
     let startTime = new Date()
-
+    
     if (containsWater) {
         do {
             x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
@@ -141,8 +162,26 @@ function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
             x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
             y = Math.floor(Math.random() * (heightMap[0].length - (2 * minDistanceFromBorder)) + minDistanceFromBorder);
 
-            if (new Date().getTime() - startTime.getTime() > 4000) {
-                minDistanceFromBorder = 20
+            if (new Date().getTime() - startTime.getTime() > 2000) {
+                // minDistanceFromBorder = 20
+                console.log("Too Long... Brute Forcing")
+                // console.log(x, y)
+                // overCount+
+
+                let arr = []
+                for (let x = 1; x < heightMap.length; x += 2) {
+                    for (let y = 1; y < heightMap[0].length; y += 2) {
+                        if (maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0) {
+                            arr.push({x: x, y: y})
+                        }
+                    }
+                }
+
+                console.log(arr)
+                console.log(arr[Math.floor(Math.random() * arr.length)])
+
+                return arr[Math.floor(Math.random() * arr.length)]
+
             }
         } while (
             !(maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0)

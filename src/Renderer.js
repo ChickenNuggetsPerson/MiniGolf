@@ -157,7 +157,7 @@ function render() {
     }
 
 
-    let renderOverlap = 32
+    let renderOverlap = 150
 
     scene.forEach((object) => {
         try {
