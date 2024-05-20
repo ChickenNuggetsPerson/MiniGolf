@@ -16,8 +16,8 @@ let wasReset = false;
 /** @type {Window[]} */
 let windowStorage = []
 let windowNames = [
-    "BallWindow", // 0
-    "GoalWindow", // 1
+    // "BallWindow", // 0
+    // "GoalWindow", // 1
     // "Float1",     // 2
     // "Float2",     // 3
     // "Float3"      // 4
@@ -53,7 +53,9 @@ function windowMoveCenter(index, x, y) {
     } catch(err) {}
 }
 function windowMoveCorner(index, x, y) {
-    windowStorage[index].moveTo(x, y)
+    try {
+        windowStorage[index].moveTo(x, y)
+    } catch (err) {}
 }
 function windowMoveSides(index, x, y, baseSizeX, baseSizeY, xPush, yPush) {
 
@@ -79,7 +81,9 @@ function windowMoveSides(index, x, y, baseSizeX, baseSizeY, xPush, yPush) {
         posY += yPush / 2
     }
 
-    windowStorage[index].resizeTo(sizeX, sizeY)
+    try {
+        windowStorage[index].resizeTo(sizeX, sizeY)
+    } catch(err) {}
     windowMoveCenter(index, posX, posY)
 }
 function windowMoveRotate(index, x, y, rot, dist) {
@@ -107,6 +111,7 @@ setInterval(() => {
                     bounds: worldBounds,
                     par: 0,
                     hits: 0,
+                    titleScreen: true
                 }))
             } else {
                 windowManager.setSendData(JSON.stringify({
@@ -114,6 +119,7 @@ setInterval(() => {
                     bounds: worldBounds,
                     par: holePar,
                     hits: ballHitCount,
+                    titleScreen: false
                 }))
             }
             
@@ -123,6 +129,7 @@ setInterval(() => {
             worldBounds = data.bounds
             holePar = data.par
             ballHitCount = data.hits
+            titleScreen = data.titleScreen
         }
 
         document.title = `Par: ${holePar} - Hits: ${ballHitCount}`
@@ -151,35 +158,54 @@ async function masterLogic() {
 }
 
 // Starts the scene
-function start() {
+async function start() {
     
     loading = true;
     wobbleGoal = false;
 
-    setTimeout(() => {
-        holeCount++
-        totalHitsCount += ballHitCount
+    await wait(100)
 
-        scene = []
-        seed = Math.random() * 10;
-        ballHitCount = 0;
+    holeCount++
+    totalHitsCount += ballHitCount
+
+    scene = []
+    // for (let i = scene.length-1; i >= 0; i--) {
+
+    //     let random = Math.floor(Math.random() * scene.length)
+
+    //     scene.splice(random, 1)
         
-        genBiome()
-        fillHeightMap();
-        setUpWorld()
+    //     if (i % 10 == 0) {
+    //         await wait(1)
+    //     }
+    // }
 
-        // Generate Height maps and then choose ball and goal locations
-        genHeightMaps();
-        spawnBallAndGoal();
+    // await wait(10)
 
-        lastHitTime = new Date()
-        loading = false;
-        wasReset = true;
-    }, 100);
+    seed = Math.random() * 100;
+    ballHitCount = 0;
+    
+    genBiome()
+    fillHeightMap();
+    setUpWorld()
+
+    // Generate Height maps and then choose ball and goal locations
+    genHeightMaps();
+    spawnBallAndGoal();
+
+    lastHitTime = new Date()
+    loading = false;
+    wasReset = true;
 
 }
 
-
+async function wait(ms) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve()
+        }, ms);
+    })
+}
 
 async function titleMenu() {
     return new Promise((resolve) => {
@@ -216,19 +242,27 @@ async function titleMenu() {
                 spawnWindows();
             }
 
-            windowMoveCenter(0,
-                xOff - 70 + Math.cos(new Date().getTime()/1000) * 100, 
-                yOff - 70 + Math.sin(new Date().getTime()/1000) * 100
+            windowMoveSides(
+                0,
+                xOff - 70 + Math.cos(new Date().getTime()/1000) * 75, 
+                yOff - 70 + Math.sin(new Date().getTime()/1000) * 75,
+                100,
+                100,
+                Math.cos(new Date().getTime()/500) * 100, 
+                Math.sin(new Date().getTime()/500) * 100
             )
-            windowStorage[0].resizeTo(10, 10);
 
-            windowMoveCenter(1, 
-                xOff + window.innerWidth + 70 + Math.sin(new Date().getTime()/1000) * 100, 
-                yOff + window.innerHeight + 70 + Math.cos(new Date().getTime()/1000) * 100
+            windowMoveSides(
+                1,
+                xOff + window.innerWidth + 70 + Math.sin(new Date().getTime()/1000) * 75, 
+                yOff + window.innerHeight + 70 + Math.cos(new Date().getTime()/1000) * 75,
+                100,
+                100,
+                Math.cos(new Date().getTime()/500 + Math.PI) * 100, 
+                Math.sin(new Date().getTime()/500 + Math.PI) * 100
             )
-            windowStorage[1].resizeTo(10, 10);
 
-        }, 20);
+        }, 50);
 
         addEventListener("click", (event) => {
             clearInterval(id)

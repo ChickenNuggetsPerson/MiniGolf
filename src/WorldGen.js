@@ -104,9 +104,11 @@ function maxHeightInSurroundings(point, radius) {
     let maxVal = 0;
     for (let x = point.x - radius; x < point.x + radius; x++) {
         for (let y = point.y - radius; y < point.y + radius; y++) {
-            if (heightMap[x][y] > maxVal) {
-                maxVal = heightMap[x][y]
-            }
+            try {
+                if (heightMap[x][y] > maxVal) {
+                    maxVal = heightMap[x][y]
+                }
+            } catch (err) {}
         }
     }
     return maxVal
@@ -125,6 +127,7 @@ function minHeightInSurroundings(point, radius) {
 // Function to find a random location on grass with a minimum distance from the world borders
 function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
     let x, y;
+    let startTime = new Date()
 
     if (containsWater) {
         do {
@@ -137,6 +140,10 @@ function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
         do {
             x = Math.floor(Math.random() * (heightMap.length -( 2 * minDistanceFromBorder)) + minDistanceFromBorder);
             y = Math.floor(Math.random() * (heightMap[0].length - (2 * minDistanceFromBorder)) + minDistanceFromBorder);
+
+            if (new Date().getTime() - startTime.getTime() > 4000) {
+                minDistanceFromBorder = 20
+            }
         } while (
             !(maxHeightInSurroundings({x: x, y: y}, minDistFromEdge) == 0)
         ); // Keep searching until a grass location is found
@@ -147,7 +154,8 @@ function findRandomGrassLocation(minDistanceFromBorder, minDistFromEdge) {
 }
 
 function findFarthestGrassLocation(startPoint, minDistanceFromBorder, minDistFromEdge) {
-    console.log("Finding Ball Location")
+    console.log("Finding Ball Location")    
+
     let maxDistance = -1;
     let farthestLocation = { x: 500, y: 500 };
 

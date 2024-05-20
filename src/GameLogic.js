@@ -28,8 +28,8 @@ let ballWindowPID_Y = new Pid(0.15, 0.000, 0.0)
 let ballWindowSize_X = 200
 let ballWindowSize_Y = 200
 
-let ballWindowPID_Pos_X = new Pid(0.15, 0.0007, 0)
-let ballWindowPID_Pos_Y = new Pid(0.15, 0.0007, 0)
+let ballWindowPID_Pos_X = new Pid(0.5, 0.0000, 0)
+let ballWindowPID_Pos_Y = new Pid(0.5, 0.0000, 0)
 let ballWindowPos_X = 0
 let ballWindowPos_Y = 0
 
@@ -90,11 +90,13 @@ function updateWorld() {
     }
 
     // Ball world collided
-    if (ball.xPos < worldBounds.x1) { ball.xPos = worldBounds.x1 + 2; ball.xVel *= -1; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
-    if (ball.xPos > worldBounds.x2) { ball.xPos = worldBounds.x2 - 2; ball.xVel *= -1; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
+    try {
+        if (ball.xPos < worldBounds.x1) { ball.xPos = worldBounds.x1 + 2; ball.xVel *= -1; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
+        if (ball.xPos > worldBounds.x2) { ball.xPos = worldBounds.x2 - 2; ball.xVel *= -1; playHardHit(ball.xVel / 10, ball.xPos, ball.yPos)}
 
-    if (ball.yPos < worldBounds.y1) { ball.yPos = worldBounds.y1 + 2; ball.yVel *= -1; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
-    if (ball.yPos > worldBounds.y2) { ball.yPos = worldBounds.y2 - 2; ball.yVel *= -1; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
+        if (ball.yPos < worldBounds.y1) { ball.yPos = worldBounds.y1 + 2; ball.yVel *= -1; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
+        if (ball.yPos > worldBounds.y2) { ball.yPos = worldBounds.y2 - 2; ball.yVel *= -1; playHardHit(ball.yVel / 10, ball.xPos, ball.yPos)}
+    } catch (err) {}
 
 
     // Ball Wall Colide
@@ -111,8 +113,10 @@ function updateWorld() {
     } catch(err) {}
     
 
-    ball.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
-    ball_shadow.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
+    try {
+        ball.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
+        ball_shadow.minHeight = heightMap[Math.floor(ball.xPos)][Math.floor(ball.yPos)]
+    } catch(err) {}
 
     // Update Arrow
     let arrow = getObjByID("arrow")
@@ -146,6 +150,8 @@ function updateWorld() {
 
         // xSize += (ball.xVel) * 15
         // ySize += (ball.yVel) * 15
+
+        ySize -= ball.height
 
         if (wasReset) {
             ballWindowPID_X.reset()
@@ -195,7 +201,7 @@ function updateWorld() {
         // console.log(push2)
         // windowMoveSides(0, 500, 500, 300, 300, 0, push2)
 
-    } catch(err) { console.log(err) }
+    } catch(err) {}
 
 
     // Move Goal Window

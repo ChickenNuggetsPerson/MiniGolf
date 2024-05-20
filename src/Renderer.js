@@ -93,6 +93,13 @@ function render() {
     ctx.fillStyle = "#3f3e3d";
     ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
+
+    if (!isMaster && titleScreen) {
+        window.requestAnimationFrame(render)
+        return;
+    }
+
+
     xOff -= xPID.iterate(xOff, window.screenLeft)
     yActual -= yPID.iterate(yActual, window.screenTop)
     
@@ -150,7 +157,7 @@ function render() {
     }
 
 
-    let renderOverlap = 150
+    let renderOverlap = 32
 
     scene.forEach((object) => {
         try {
